@@ -9,7 +9,7 @@ import 'element-plus/dist/index.css'
 import './utils/request'
 // import 'utils/http'
 // 统一导入el-icon图标 解决图标不显示问题
-import * as ElIconModules from '@element-plus/icons-vue'
+import * as ElIconModules from '@element-plus/icons'
 import '@/assets/css/global.css'
 
 // 统一注册el-icon图标

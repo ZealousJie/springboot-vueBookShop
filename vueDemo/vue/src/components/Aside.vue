@@ -12,9 +12,10 @@
         <template #title>系统管理</template>
         <el-menu-item index="/user">用户管理</el-menu-item>
       </el-sub-menu>
-      <el-menu-item index="/book">书籍管理</el-menu-item>
-      <el-menu-item index="/news">新闻管理</el-menu-item>
+      <el-menu-item index="/book">上架书籍管理</el-menu-item>
+      <el-menu-item index="/news">公告管理</el-menu-item>
       <el-menu-item index="/orders">订单管理</el-menu-item>
+      <el-menu-item index="/audit">书籍审核管理</el-menu-item>
     </el-menu>
   </div>
 </template>

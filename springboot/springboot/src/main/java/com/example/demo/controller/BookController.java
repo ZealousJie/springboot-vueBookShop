@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
 import com.example.demo.entity.Book;
 import com.example.demo.entity.User;
+import com.example.demo.mapper.AuditMapper;
 import com.example.demo.mapper.BookMapper;
 import com.example.demo.mapper.UserMapper;
+import com.example.demo.service.BookService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -20,13 +22,16 @@ public class BookController {
 
     @Resource
     BookMapper bookMapper;
+    @Resource
+    BookService bookService;
 
 
     //@RequestBody 将json 数据转换为Java对象
-    @PostMapping //新增
+    @PostMapping //上架请求 加入到审核列表
     public Result<?> save(@RequestBody Book book){
+        book.setState("待审核");
+        bookService.addToAudit(book);
 
-        bookMapper.insert(book);
         return Result.success();
     }
 

@@ -21,5 +21,6 @@ public class Book {
     private Date createTime;//出版时间
     private String author;
     private String cover;
+    private String state;
     private Integer stock;//库存
 }

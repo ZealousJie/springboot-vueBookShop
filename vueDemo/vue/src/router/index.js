@@ -6,6 +6,7 @@ import Person from "../views/Person";
 import error from "../views/404";
 import News from "../views/News";
 import Orders from "../views/Orders";
+import Audit from "@/views/Audit";
 
 const routes = [
   {
@@ -38,6 +39,11 @@ const routes = [
         path: 'orders',
         name: 'Orders',
         component: Orders,
+      },
+      {
+        path: 'audit',
+        name: 'Audit',
+        component: Audit,
       },
 
     ]

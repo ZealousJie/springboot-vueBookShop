@@ -2,7 +2,7 @@
   <div style="padding: 10px">
     <!--    功能区域-->
     <div style="margin: 10px 0">
-      <el-button type="primary" @click="add">新增</el-button>
+      <el-button type="primary" @click="add">上架</el-button>
       <el-button type="primary">导入</el-button>
       <el-button type="primary">导出</el-button>
     </div>
@@ -11,16 +11,17 @@
       <el-input v-model="search" placeholder="请输入关键字" style="width: 20%;"></el-input>
       <el-button type="primary" style="margin-left: 5px" @click="load()">搜索</el-button>
     </div>
-    <el-table :data="tableData" style="width: 95%;margin-left: 30px" stripe border>
+    <el-table :data="tableData" style="width: 99%;margin-left: 0px" stripe border>
       <!--      sortable 加了个可以排序的东东 prop name label value-->
-      <el-table-column prop="bid" label="序号" sortable width="80px"/>
-      <el-table-column prop="bookName" label="书名" width="180px"/>
-      <el-table-column prop="price" label="价格" width="100px"/>
-      <el-table-column prop="createTime" label="出版时间" width="200px"/>
-      <el-table-column prop="author" label="作者" width="100px"/>
-      <el-table-column prop="stock" label="库存" width="100px"/>
+      <el-table-column prop="bid" label="序号" sortable width="80px" align='center'/>
+      <el-table-column prop="bookName" label="书名" width="150px" align='center'/>
+      <el-table-column prop="price" label="价格" width="100px" align='center'/>
+      <el-table-column prop="createTime" label="上架时间" width="150px" align='center'/>
+      <el-table-column prop="author" label="作者" width="100px" align='center'/>
+      <el-table-column prop="stock" label="库存" width="100px" align='center'/>
+      <el-table-column prop="state" label="上架情况" width="100px" align='center'/>
       <el-table-column
-          label="封面">
+          label="封面" width="120px" align='center'>
         <template #default="scope">
 <!--     preview-teleported="true" 解决图片被切割     -->
           <el-image
@@ -31,16 +32,17 @@
           </el-image>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="操作" >
+      <el-table-column fixed="right" label="操作" align='center'>
         <template #default="scope">
-          <el-button size="small" @click="handleClick(scope.row)">编辑</el-button>
-          <el-button size="small" @click="handleOrder(scope.row.bid)" type="success">购买</el-button>
+          <el-button size="small" @click="handleClick(scope.row)" icon="edit" :disabled="scope.row.state !=='已上架'">编辑</el-button>
+          <el-button size="small" @click="handleOrder(scope.row.bid)" type="success" icon="sell" :disabled="scope.row.state !=='已上架'">购买测试</el-button>
           <el-popconfirm title="确定要删除吗" @confirm="handleDelete(scope.row.bid)">
             <template #reference>
-              <el-button size="small" type="danger">删除</el-button>
+              <el-button size="small" type="danger" icon="delete" :disabled="scope.row.state !=='已上架'">下架</el-button>
             </template>
           </el-popconfirm>
         </template>
+
       </el-table-column>
     </el-table>
     <!--  分页  -->
@@ -255,7 +257,7 @@ export default {
           //element ui 提供的提示框
           this.$message({
             type: "success",
-            message: "删除成功"
+            message: "下架成功"
           })
         }
         else {
