@@ -48,6 +48,10 @@ public class OrderController {
         orders.setState("未支付");
         orders.setTotal(book.getPrice().multiply(BigDecimal.valueOf(i)));
 
+//        long currentTimeMillis = System.currentTimeMillis();
+//        long dueTimeMillis = currentTimeMillis + 900000;
+//        orders.setDueDate(dueTimeMillis);
+
         ordersMapper.insert(orders);
         book.setStock(stock);
         bookMapper.updateById(book);

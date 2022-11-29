@@ -14,6 +14,7 @@ import java.util.Date;
 
 @RestController
 @RequestMapping("/news")
+@CrossOrigin
 public class NewsController {
 
     @Resource

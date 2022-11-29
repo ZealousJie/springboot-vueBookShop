@@ -201,7 +201,7 @@ export default {
             //element ui 提供的提示框
             this.$message({
               type: "success",
-              message: "新增成功"
+              message: "上架成功"
             })
           }
           else {

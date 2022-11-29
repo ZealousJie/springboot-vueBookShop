@@ -2,15 +2,22 @@ package com.example.demo.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
+import com.example.demo.common.SearchForm;
 import com.example.demo.entity.User;
 import com.example.demo.mapper.UserMapper;
+import com.example.demo.service.UserService;
+import com.example.demo.vo.RegisterVO;
+import com.example.demo.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,68 +35,65 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user")
 @CrossOrigin
+@Slf4j
 public class UserController {
 
     @Resource
     UserMapper userMapper;
+    @Resource
+    UserService userService;
 
-    @PostMapping("/login")//
-    public Result<?> login(@RequestBody User user){
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUsername, user.getUsername()).eq(User::getPassword, user.getPassword());
-        User selectedUser = userMapper.selectOne(wrapper);
-        if(selectedUser == null){
-            return Result.error("1","用户名或密码错误");
-        }
-        return Result.success(selectedUser);
+    @PostMapping("/emailLogin")//
+    public Result<?> emailLogin(@RequestBody User user){
+
+        return Result.success();
     }
+    //向登录邮箱发送验证码
+    @PostMapping("/email/{email}")//
+    public Result<?> sendEmail(@PathVariable("email") String email){
+        System.out.println(email);
+        return Result.success();
+    }
+
     @PostMapping("/register")//
-    public Result<?> register(@RequestBody User user){
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUsername, user.getUsername());
-        User selectedUser = userMapper.selectOne(wrapper);
-        if(selectedUser != null){
-            return Result.error("1","用户名重复");
+    public Result<?> register(@RequestBody RegisterVO registerVO){
+        boolean flag = checking(registerVO.getAccount(),registerVO.getPassword());
+        if (flag){
+            return userService.userRegister(registerVO);
         }
-        userMapper.insert(user);
-        return Result.success();
+        return Result.error("1","账号或密码不规范");
     }
 
-    //@RequestBody 将json 数据转换为Java对象
-    @PostMapping //新增
-    public Result<?> save(@RequestBody User user){
-        if(user.getPassword() == null){
-            user.setPassword("123456");
+
+    @PostMapping
+    public Result<?> save(@RequestBody UserVO userVO){
+        boolean flag = checkingUserVO(userVO);
+        if (!flag){
+            return Result.error("1","账号信息缺失或不规范 无法新增");
         }
-        userMapper.insert(user);
-        return Result.success();
+
+        return userService.insertUser(userVO);
     }
 
 
 
     @GetMapping//查询
-    public Result<?> findPage(@RequestParam(defaultValue = "1") Integer pageNum,
-                              @RequestParam(defaultValue = "10") Integer pageSize,
-                              @RequestParam(defaultValue = "") String search){
-        //new一个mp提供的进行分页的Page对象
-        Page<User> page = new Page<>(pageNum, pageSize);
-        //用Wrappers 生成一个用来完成模糊查询的 wrapper
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery();
-        if(StrUtil.isNotBlank(search)){//当search 不为空就进行模糊查询 hutool提供的方法 帮助判断非空？
-            wrapper.like(User::getNickName, search);
+    public Result<?> findUserPage(@RequestBody SearchForm searchForm){
+        List<UserVO> usersList = userService.findUsers(searchForm);
+        return Result.success(usersList);
+    }
+
+    @PostMapping (value = "/updateUser")
+    public Result<?> update(@RequestBody UserVO userVO){
+        boolean flag = checkingUserVO(userVO);
+        if (!flag){
+            return Result.error("1","更新后的信息不和规范");
         }
-        //用mp的selectPage方法完成分页
-        Page<User> userPage = userMapper.selectPage(page, wrapper);
-        return Result.success(userPage);
+        return userService.updateUser(userVO);
     }
-    @PutMapping //更新
-    public Result<?> update(@RequestBody User user){
-        userMapper.updateById(user);
-        return Result.success();
-    }
-    @DeleteMapping("/{id}")
-    public Result<?> delete(@PathVariable Integer id){
-        userMapper.deleteById(id);
+    @DeleteMapping("/{uid}")
+    public Result<?> delete(@PathVariable String uid){
+        userMapper.deleteByUid(uid);
         return Result.success();
     }
     //hutool 导入导出excel文件
@@ -100,12 +104,12 @@ public class UserController {
         List<User> all = userMapper.selectList(null);//查到所有的用户
         for (User user : all) {
             Map<String, Object> row1 = new LinkedHashMap<>();
-            row1.put("用户名", user.getUsername());
+            row1.put("用户名", user.getUserName());
             row1.put("密码", user.getPassword());
-            row1.put("昵称", user.getNickName());
+            row1.put("昵称", user.getRealName());
             row1.put("年龄", user.getAge());
             row1.put("性别", user.getSex());
-            row1.put("地址", user.getAddress());
+            row1.put("地址", user.getIdentityNum());
             list.add(row1);
         }
         // 2. 将list写入到excel
@@ -128,12 +132,12 @@ public class UserController {
         List<User> saveList = new ArrayList<>();
         for (List<Object> row : lists) {
             User user = new User();
-            user.setUsername(row.get(0).toString());
+            user.setUserName(row.get(0).toString());
             user.setPassword(row.get(1).toString());
-            user.setNickName(row.get(2).toString());
+            user.setRealName(row.get(2).toString());
             user.setAge(Integer.valueOf(row.get(3).toString()));
-            user.setSex(row.get(4).toString());
-            user.setAddress(row.get(5).toString());
+            user.setSex("男");
+            user.setIdentityNum(row.get(5).toString());
             saveList.add(user);
         }
         for (User user : saveList) {
@@ -147,6 +151,25 @@ public class UserController {
 
 
         return Result.success();
+    }
+
+    public boolean checking(String account,String pwd){
+        if (account.length()<11 && StrUtil.isNotBlank(account)){
+            return true;
+        }
+        if (pwd.length()<33 && StrUtil.isNotBlank(pwd)){
+            return true;
+        }
+        return false;
+    }
+    public boolean checkingUserVO(UserVO userVO){
+        if (userVO.getAccount().length() == 0 || userVO.getAccount().length() > 10){
+            return false;
+        }
+        if (userVO.getPassword().length() == 0 || userVO.getPassword().length() > 32){
+            return false;
+        }
+        return true;
     }
 
 }

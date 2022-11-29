@@ -16,4 +16,4 @@ import '@/assets/css/global.css'
 for(let iconName in ElIconModules){
     app.component(iconName,ElIconModules[iconName])
 }
-app.use(store).use(router).use(ElementPlus,{locale: zhCn, size: 'normal'}).mount('#app')
+app.use(store).use(router).use(ElementPlus,{locale: zhCn, size: 'small'}).mount('#app')

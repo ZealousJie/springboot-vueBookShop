@@ -18,10 +18,13 @@ import java.util.Date;
 public class Audit {
     @TableId(type = IdType.AUTO)
     private Integer id;
+    private Integer bid;
     private String bookName;
     private String author;
     private String state;
-    private String overrule_reason;
+    private String overruleReason;
+    private String auditType;
+    private String auditPerson;
     private BigDecimal pricing;
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     private Date publishTime;

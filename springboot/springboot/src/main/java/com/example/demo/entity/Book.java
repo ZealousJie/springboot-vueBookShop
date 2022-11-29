@@ -12,7 +12,7 @@ import java.util.Date;
 @TableName("book")
 @Data
 public class Book {
-    //设置主键id 自增
+    //设置主键bid 自增
     @TableId(type = IdType.AUTO)
     private Integer bid;
     private String bookName;
@@ -20,7 +20,7 @@ public class Book {
     @JsonFormat(pattern = "yyyy-MM-dd",timezone = "GMT+8")
     private Date createTime;//出版时间
     private String author;
-    private String cover;
+    private String cover;//封面
     private String state;
     private Integer stock;//库存
 }

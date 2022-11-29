@@ -3,8 +3,8 @@
         <div style="width: 400px; margin: 100px auto">
           <div style="font-size: 30px; text-align: center; padding: 30px 0; color: #333">欢迎注册</div>
           <el-form ref="form" :model="form" size="normal" :rules="rules">
-            <el-form-item prop="username">
-              <el-input prefix-icon="user" v-model="form.username" placeholder="请输入账号"></el-input>
+            <el-form-item prop="account">
+              <el-input prefix-icon="user" v-model="form.account" placeholder="请输入账号"></el-input>
 
             </el-form-item>
             <el-form-item prop="password">
@@ -12,6 +12,12 @@
             </el-form-item>
             <el-form-item prop="confirm">
               <el-input prefix-icon="Lock" v-model="form.confirm" show-password placeholder="确认密码"></el-input>
+            </el-form-item>
+            <el-form-item prop="identityNum">
+              <el-input prefix-icon="Lock" v-model="form.identityNum" show-password placeholder="身份证号"></el-input>
+            </el-form-item>
+            <el-form-item prop="realName">
+              <el-input prefix-icon="user" v-model="form.realName"  placeholder="真实姓名"></el-input>
             </el-form-item>
             <el-form-item>
               <el-button style="width: 100%" type="primary" @click="register">注册</el-button>
@@ -36,14 +42,23 @@ export default {
     return {
       form: {},
       rules: {
-        username: [
-          {required: true, message: '请输入用户名', trigger: 'blur'},
+        account: [
+          {required: true, message: '请输入账号', trigger: 'blur'},
+          {min:1, max: 10, message: '账号长度在10以内', trigger: 'blur'}
         ],
         password: [
           {required: true, message: '请输入密码', trigger: 'blur'},
+          {min:1, max: 32, message: '密码长度在32以内', trigger: 'blur'}
         ],
         confirm: [
           {required: true, message: '请输入确认密码', trigger: 'blur'},
+        ],
+        identityNum: [
+          {required: true, message: '请输入身份证号', trigger: 'blur'},
+          {min:1, max: 18, message: '身份证号长度必须为18', trigger: 'blur'}
+        ],
+        realName: [
+          {required: true, message: '请输入真实姓名', trigger: 'blur'},
         ],
       },
     }

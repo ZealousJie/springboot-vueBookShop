@@ -12,7 +12,7 @@
       >
         <el-button type="primary">导入</el-button>
       </el-upload>
-      <el-button type="primary" @click="exportUser">导出</el-button>
+      <el-button type="primary" >导出</el-button>
     </div>
     <!--    搜索区域-->
     <div style="margin: 10px 0">
@@ -22,17 +22,21 @@
     <el-table :data="tableData" style="width: 99%;margin-left: 0px" stripe border>
       <!--      sortable 加了个可以排序的东东 prop name label value-->
       <el-table-column prop="id" label="序号" sortable width="80px"/>
+      <el-table-column prop="bid" label="书编" sortable width="80px"/>
       <el-table-column prop="bookName" label="书名" width="150px"/>
 <!--      <el-table-column prop="content" label="内容" width="100px"/>-->
       <el-table-column prop="author" label="作者" width="100px"/>
       <el-table-column prop="pricing" label="定价" width="70px"/>
       <el-table-column prop="publishTime" label="出版时间" width="110px"/>
-      <el-table-column prop="state" label="审核情况" width="100px"/>
-      <el-table-column prop="overrule_reason" label="驳回理由"/>
-      <el-table-column fixed="right" label="操作" align='center'  width="250px">
-        <template #default="scope">
-          <el-button size="small" @click="details(scope.row)">审核通过</el-button>
-          <el-button size="small" @click="handleClick(scope.row)">审核不通过</el-button>
+      <el-table-column prop="auditType" label="审核类型" width="90px"/>
+      <el-table-column prop="auditPerson" label="审核人" width="80px"/>
+      <el-table-column label="审核情况" prop="state" width="200px"/>
+      <el-table-column prop="overruleReason" label="驳回理由" :formatter="stateFormat" v-if="false"/>
+      <el-table-column fixed="right" label="操作" align='center'  width="300px">
+        <template v-slot="scope">
+          <el-button size="small" @click="auditDo(scope.row.id)" :disabled=" scope.row.state !== '待审核'">审核通过</el-button>
+          <el-button size="small" @click="auditDont(scope.row)" :disabled=" scope.row.state !== '待审核'" >审核不通过</el-button>
+          <el-button size="small" @click="refuseMessage(scope.row)"  :disabled=" scope.row.state === '已审核(上架中)'">驳回详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -49,25 +53,24 @@
       />
       <!--  分页  -->
 
-<!--编辑修改弹出框-->
-      <el-dialog v-model="dialogVisible" title="提示" width="50%">
-        <el-form :model="form" label-width="120px">
-          <el-form-item label="标题">
-            <el-input v-model="form.title" style="width: 50%;"></el-input>
-          </el-form-item>
+      <el-dialog v-model="vis"  title="驳回理由" width="50%">
+        <el-form :model="form">
+
+        </el-form>
+        <el-card>
           <div id="div1">
           </div>
-        </el-form>
+        </el-card>
         <template #footer>
             <span class="dialog-footer">
-              <el-button @click="dialogVisible = false">取消</el-button>
-              <el-button type="primary" @click="save">确认</el-button>
+              <el-button @click="vis = false">取消</el-button>
+              <el-button type="primary" @click="sure">确认</el-button>
             </span>
         </template>
       </el-dialog>
-      <el-dialog v-model="vis" title="新闻详情" width="50%">
+      <el-dialog v-model="dialogVisible" title="驳回详情" width="50%">
         <el-card>
-          <div v-html="detail.content" style="min-height: 200px"> </div>
+          <div v-html="detail.overruleReason" style="min-height: 200px"> </div>
         </el-card>
       </el-dialog>
     </div>
@@ -104,18 +107,65 @@ export default {
     this.load()
   },
   methods: {
-    details(row) {
+    sure(){
+      let uuid = JSON.parse(window.sessionStorage.getItem('uuid'))
+      this.form.overruleReason = editor.txt.html();
+      if (this.form.overruleReason){
+        request.put("/audit/updateAuditDont/uuid/"+uuid,this.form).then( res =>{
+          if (res.code === "0") {
+            this.$message.success("审核成功")
+            this.load()
+          }else {
+            this.$message.error("审核失败")
+          }
+        })
+      }else {
+        alert("不能为空")
+      }
+    },
+    stateFormat(row,column,cellValue){
+      if(!cellValue) return "";
+      if (cellValue.length > 2){
+        return cellValue.slice(0,2)+ "...";
+      }
+      return cellValue;
+    },
+    refuseMessage(row) {
+      this.detail=row;
+      this.dialogVisible=true
+    },
+    auditDo(id) {
+      let uuid = JSON.parse(window.sessionStorage.getItem('uuid'))
+      request.get("/audit/updateAuditDo/id/"+id+"/uuid/"+uuid).then(res =>{
+        if (res.code === "0") {
+          this.$message.success("审核成功")
+          this.load()
+        }else {
+          this.$message.error("审核失败")
+        }
+      })
+    },
+    auditDont(row) {
+      this.form=JSON.parse(JSON.stringify(row))
       this.vis=true
-      this.detail= row
+      this.$nextTick(() => {
+        if(!editor){
+          this.createEditor()
+          editor.txt.html("请填写合理的驳回理由,为空无法提交")
+        }
+        else {
+          editor.destroy();
+          this.createEditor()
+          editor.txt.html("请填写合理的驳回理由,为空无法提交")
+        }
+      })
+
     },
     handleUploadSuccess(res) {
       if (res.code === "0") {
         this.$message.success("导入成功")
         this.load()
       }
-    },
-    exportUser() {
-      location.href = "http://" + window.server.filesUploadUrl + ":9090/xx/export";
     },
     createEditor(){
       editor = new E("#div1")
@@ -137,105 +187,6 @@ export default {
         console.log(res)
         this.tableData= res.data.records
         this.total = res.data.total
-      })
-    },
-    add(){
-      this.dialogVisible=true
-      this.form={} //清空表单域
-      this.$nextTick(() => {
-        if (!editor){
-          this.createEditor()
-        }else {
-          editor.destroy()
-          this.createEditor()
-        }
-
-      })
-    },
-    save(){
-      this.form.content=editor.txt.html();
-      let userStr = sessionStorage.getItem("user") || "{}"
-      let user = JSON.parse(userStr)
-      this.form.author = user.nickName
-      if(this.form.id){//update
-        request.put("/news",this.form).then(res =>{
-          console.log(res)
-          if (res.code === '0'){
-            //element ui 提供的提示框 别忘了这个美元符合
-            this.$message({
-              type: "success",
-              message: "更新成功"
-            })
-          }
-          else {
-            this.$message({
-              type: "error",
-              message: res.msg
-            })
-          }
-          this.load()
-          this.dialogVisible=false
-        })
-      }
-      else {//add
-        request.post("/news", this.form).then(res =>{
-          console.log(res);
-          if (res.code === '0'){
-            //element ui 提供的提示框
-            this.$message({
-              type: "success",
-              message: "新增成功"
-            })
-          }
-          else {
-            this.$message({
-              type: "error",
-              message: res.msg
-            })
-          }
-          this.load()
-          this.dialogVisible=false
-        })
-
-      }
-    },
-
-    //编辑
-    handleClick(row){
-      this.form=JSON.parse(JSON.stringify(row)) //这一步将数据转来转去的操作能将要展示的数据搞成一个独立的对象
-      //这里的form有id
-      this.dialogVisible=true
-      this.$nextTick(() => {
-        if(!editor){
-          this.createEditor()
-          editor.txt.html(row.content)
-        }
-        else {
-          editor.destroy();
-          this.createEditor()
-          editor.txt.html(row.content)
-          }
-        })
-
-    },
-    handleDelete(id){
-      console.log(id)
-      request.delete("/news/"+id).then(res =>{
-        console.log(res)
-        if (res.code === '0'){
-          //element ui 提供的提示框
-          this.$message({
-            type: "success",
-            message: "删除成功"
-          })
-        }
-        else {
-          this.$message({
-            type: "error",
-            message: res.msg
-          })
-        }
-        this.load()
       })
     },
     handleSizeChange(ps){

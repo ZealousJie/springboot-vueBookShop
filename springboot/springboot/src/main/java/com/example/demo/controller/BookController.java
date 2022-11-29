@@ -14,6 +14,9 @@ import com.example.demo.service.BookService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/book")
@@ -29,7 +32,7 @@ public class BookController {
     //@RequestBody 将json 数据转换为Java对象
     @PostMapping //上架请求 加入到审核列表
     public Result<?> save(@RequestBody Book book){
-        book.setState("待审核");
+
         bookService.addToAudit(book);
 
         return Result.success();

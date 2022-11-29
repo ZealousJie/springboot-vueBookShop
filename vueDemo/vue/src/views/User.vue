@@ -20,28 +20,41 @@
       <el-input v-model="search" placeholder="请输入关键字" style="width: 20%;"></el-input>
       <el-button type="primary" style="margin-left: 5px" @click="load()">搜索</el-button>
     </div>
-    <el-table :data="tableData" style="width: 95%;" stripe border>
+    <el-table :data="tableData" style="width: 99%;" stripe border>
       <!--      sortable 加了个可以排序的东东 prop name label value-->
-      <el-table-column prop="id" label="ID" sortable width="70px" align="center"/>
-      <el-table-column prop="username" label="用户名" width="100px" align="center"/>
-      <el-table-column prop="password" label="密码" width="120px" align="center"/>
-      <el-table-column prop="nickName" label="昵称" width="100px" align="center"/>
-      <el-table-column prop="age" label="年龄" width="70px" align="center"/>
-      <el-table-column prop="sex" label="性别" width="70px" align="center"/>
-      <el-table-column prop="address" label="地址" width="250px" align="center"/>
-      <el-table-column label="角色" width="100px">
+      <el-table-column prop="uid" label="ID" sortable  align="center"/>
+      <el-table-column prop="account" label="账号"  align="center"/>
+      <el-table-column prop="password" label="密码" align="center"/>
+      <el-table-column prop="realName" label="姓名"  align="center"/>
+      <el-table-column prop="age" label="年龄" sortable  align="center" width="80px"/>
+      <el-table-column prop="sex" label="性别"  align="center" width="50px">
         <template #default="scope">
-          <span v-if="scope.row.role === 1">管理员</span>
-          <span v-if="scope.row.role === 2">普通用户</span>
+          <span v-if="scope.row.sex === 0">女</span>
+          <span v-if="scope.row.sex === 1">男</span>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="操作" >
+      <el-table-column prop="roles" label="角色" width="100px" align="center"/>
+      <el-table-column prop="phone" label="联系电话" align="center"/>
+      <el-table-column prop="state" label="账号状态" align="center" >
         <template #default="scope">
-          <el-button size="mini" type="success" plain @click="showbooks(scope.row.id)">查看购买记录</el-button>
-          <el-button size="small" @click="handleClick(scope.row)">编辑</el-button>
-          <el-popconfirm title="确定要删除吗" @confirm="handleDelete(scope.row.id)">
+          <span v-if="scope.row.state === 0">封禁</span>
+          <span v-if="scope.row.state === 1">正常</span>
+          <span v-if="scope.row.state === 2">未激活</span>
+        </template>
+      </el-table-column>
+      <el-table-column fixed="right" label="操作" align="center">
+        <template #default="scope">
+          <el-button size="mini" type="danger" plain @click="showReason(scope.row.uid)"
+                     v-if="scope.row.state === 0" class="el-icon-search" title="查看封禁原因" circle/>
+          <el-button size="mini" type="danger" plain @click="prohibit(scope.row.uid)"
+                     v-if="scope.row.state === 1" class="el-icon-warning" title="封禁" circle/>
+          <el-button size="mini" type="success"
+                     v-if="scope.row.state === 2" class="el-icon-warning" title="未激活需完善个人信息" circle/>
+          <el-button size="small" type="success" plain @click="handleClick(scope.row)"
+                      class="el-icon-edit" title="修改用户信息" circle/>
+          <el-popconfirm title="确定要注销吗" @confirm="handleDelete(scope.row.uid)">
             <template #reference>
-              <el-button size="small" type="danger">删除</el-button>
+              <el-button size="small" type="danger" circle class="el-icon-delete" title="注销用户"/>
             </template>
           </el-popconfirm>
         </template>
@@ -62,14 +75,17 @@
 
       <el-dialog v-model="dialogVisible" title="提示" width="30%">
         <el-form :model="form" label-width="120px">
-          <el-form-item label="用户名">
-            <el-input v-model="form.username" style="width: 80%;"></el-input>
+          <el-form-item label="账号">
+            <el-input v-model="form.account" style="width: 80%;"></el-input>
           </el-form-item>
           <el-form-item label="密码">
             <el-input v-model="form.password" style="width: 80%;"></el-input>
           </el-form-item>
           <el-form-item label="昵称">
-            <el-input v-model="form.nickName" style="width: 80%;"></el-input>
+            <el-input v-model="form.userName" style="width: 80%;"></el-input>
+          </el-form-item>
+          <el-form-item label="姓名">
+            <el-input v-model="form.realName" style="width: 80%;"></el-input>
           </el-form-item>
           <el-form-item label="年龄">
             <el-input v-model="form.age" style="width: 80%;"></el-input>
@@ -79,10 +95,6 @@
             <el-radio v-model="form.sex" label="女">女</el-radio>
             <el-radio v-model="form.sex" label="未知">未知</el-radio>
           </el-form-item>
-          <el-form-item label="地址">
-            <el-input type="textarea" v-model="form.address" style="width: 80%;"></el-input>
-          </el-form-item>
-
 
         </el-form>
         <template #footer>
@@ -101,6 +113,7 @@
 <script>
 
 import request from "../utils/request";
+import Cookies from 'js-cookie';
 
 export default {
   name: 'User',
@@ -123,11 +136,18 @@ export default {
     this.load()
   },
   methods: {
-    showbooks(id){
+    /**
+     * 封禁表
+     * @param id
+     */
+    showReason(id){
       request.get("/user/books/"+id).then(res =>{
         console.log(res)
 
       })
+    },
+    prohibit(id){
+
     },
     handleUploadSuccess(res) {
       if (res.code === "0") {
@@ -157,9 +177,11 @@ export default {
       this.form={} //清空表单域
     },
     save(){
-      if(this.form.id){//update
-        request.put("/user",this.form).then(res =>{
-          console.log(res)
+      let user = JSON.parse(Cookies.get("user"))
+      this.form.roles = user.roleIds
+      this.form.operator = user.uid
+      if(this.form.uid){//update
+        request.post("/user/updateUser",this.form).then(res =>{
           if (res.code === '0'){
             //element ui 提供的提示框 别忘了这个美元符合
             this.$message({
@@ -205,9 +227,8 @@ export default {
       //这里的form有id
       this.dialogVisible=true
     },
-    handleDelete(id){
-      console.log(id)
-      request.delete("/user/"+id).then(res =>{
+    handleDelete(uid){
+      request.delete("/user/"+uid).then(res =>{
         console.log(res)
         if (res.code === '0'){
           //element ui 提供的提示框

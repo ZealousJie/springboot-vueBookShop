@@ -2,6 +2,7 @@
   <div>
     <el-card style="width: 40%; margin: 10px">
       <el-form ref="form" :model="form" label-width="80px">
+        <el-row>
         <el-form-item style="text-align: center" label-width="0">
           <el-upload
               class="avatar-uploader"
@@ -13,11 +14,17 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
+          <el-form-item>
+            <div style="font-size: 50px">
+              个人信息
+            </div>
+          </el-form-item>
+        </el-row>
         <el-form-item label="用户名">
-          <el-input v-model="form.username" disabled></el-input>
+          <el-input v-model="form.userName" disabled></el-input>
         </el-form-item>
         <el-form-item label="昵称">
-          <el-input v-model="form.nickName"></el-input>
+          <el-input v-model="form.realName"></el-input>
         </el-form-item>
         <el-form-item label="年龄">
           <el-input v-model="form.age"></el-input>
@@ -25,18 +32,16 @@
         <el-form-item label="性别">
           <el-input v-model="form.sex"></el-input>
         </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model="form.address"></el-input>
+        <el-form-item label="密码">
+          <el-input v-model="form.password" show-password></el-input>
         </el-form-item>
-        <!--        <el-form-item label="密码">-->
-        <!--          <el-input v-model="form.password" show-password></el-input>-->
-        <!--        </el-form-item>-->
-        <el-form-item label="余额(￥)">
-          <el-input v-model="form.account" show-password></el-input>
-        </el-form-item>
+<!--        <el-form-item label="余额(￥)">-->
+<!--          <el-input v-model="form.account" show-password></el-input>-->
+<!--        </el-form-item>-->
       </el-form>
       <div style="text-align: center">
         <el-button type="primary" @click="update">保存</el-button>
+        <el-button type="danger" @click="updatePwd()">修改密码</el-button>
       </div>
     </el-card>
 
@@ -45,7 +50,7 @@
 
 <script>
 import request from "../utils/request";
-
+import Cookies from 'js-cookie'
 export default {
   name: "Person",
   data() {
@@ -54,10 +59,13 @@ export default {
     }
   },
   created() {
-    let str = sessionStorage.getItem("user") || "{}"
-    this.form = JSON.parse(str)
+    let str = Cookies.get('user') ? JSON.parse(Cookies.get('user')) : {}
+    this.form = str
   },
   methods: {
+    updatePwd(){
+
+    },
     handleAvatarSuccess(res) {
       this.form.avatar = res.data
       this.$message.success("上传成功")
@@ -71,7 +79,8 @@ export default {
             type: "success",
             message: "更新成功"
           })
-          sessionStorage.setItem("user", JSON.stringify(this.form))
+          Cookies.set('user',JSON.stringify(this.form))
+          // sessionStorage.setItem("user", JSON.stringify(this.form))
           // 触发Layout更新用户信息
           this.$emit("userInfo")
         } else {

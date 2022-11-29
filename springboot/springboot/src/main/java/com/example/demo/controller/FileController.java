@@ -35,6 +35,7 @@ public class FileController {
         String originalFilename = file.getOriginalFilename();  // 获取源文件的名称
         // 定义文件的唯一标识（前缀）
         String flag = IdUtil.fastSimpleUUID();
+        //System.getProperty("user.dir") 获取当前项目的根路径
         String rootFilePath = System.getProperty("user.dir") + "/files/" + flag + "_" + originalFilename;  // 获取上传的路径
         File rootFile = new File(rootFilePath);
         if (!rootFile.getParentFile().exists()) {

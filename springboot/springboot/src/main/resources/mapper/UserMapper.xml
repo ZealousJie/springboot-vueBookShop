@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.UserMapper">
+
+<!--    <resultMap id="userMap" type="com.example.demo.entity.User">-->
+<!--        <result property="id" column="id"/>-->
+<!--        <result property="username" column="username"/>-->
+<!--        <result property="password" column="password"/>-->
+<!--        <result property="nickName" column="nick_name"/>-->
+<!--        <result property="age" column="age"/>-->
+<!--        <result property="sex" column="sex"/>-->
+<!--        <result property="address" column="address"/>-->
+<!--        <result property="avatar" column="avatar"/>-->
+<!--        <collection property="bookList" javaType="ArrayList" ofType="com.example.demo.entity.Book">-->
+<!--            <result column="b_id" property="bid" />-->
+<!--            <result column="b_name" property="bookName" />-->
+<!--            <result column="b_price" property="price" />-->
+<!--        </collection>-->
+<!--    </resultMap>-->
+
+    <sql id="userArgs">
+        uid,
+        user_name,
+        real_name,
+        password,
+        account,
+        phone,
+        email,
+        age,
+        sex,
+        identity_num,
+        role_ids,
+        avatar,
+        state,
+        creation
+    </sql>
+
+
+
+    <select id="findUsersByCondition" resultType="com.example.demo.entity.User">
+        select <include refid="userArgs"/> from match_user
+        <if test="column != null and column != '' and search != null and search != ''">
+            where #{column} like concat ('%',#{search},'%')
+        </if>
+        <if test="sortColumn != null and sortColumn != ''">
+            order by #{sortColumn}
+            <if test="asc == false">
+                desc
+            </if>
+        </if>
+        <if test="sortColumn == null">
+            order by creation
+        </if>
+    </select>
+    <select id="findUsersAll" resultType="com.example.demo.entity.User">
+        select <include refid="userArgs"/> from match_user
+        <if test="sort != null and sort != ''">
+            order by #{sort}
+            <if test="order == false">
+                desc
+            </if>
+        </if>
+        <if test="sort == null">
+            order by creation
+        </if>
+    </select>
+
+    <delete id="deleteByUid" parameterType="String">
+        delete from match_user where uid=#{uid}
+    </delete>
+</mapper>

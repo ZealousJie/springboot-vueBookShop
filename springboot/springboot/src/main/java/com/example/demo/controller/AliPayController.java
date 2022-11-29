@@ -12,10 +12,7 @@ import com.example.demo.common.config.AliPayConfig;
 import com.example.demo.entity.Orders;
 import com.example.demo.mapper.BookMapper;
 import com.example.demo.mapper.OrdersMapper;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/alipay")
 public class AliPayController {
 
