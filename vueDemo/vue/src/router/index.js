@@ -1,12 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import User from '../views/User.vue'
-import Layout from "../layout/Layout";
-import Book from "../views/Book";
-import Person from "../views/Person";
-import error from "../views/404";
-import News from "../views/News";
-import Orders from "../views/Orders";
-import Audit from "@/views/Audit";
+import Layout from "@/layout/Layout";
+
 
 const routes = [
   {
@@ -16,36 +10,10 @@ const routes = [
     redirect: '/login',
     children: [
       {
-        path: 'user',
-        name: 'User',
-        component: User,
-      },
-      {
         path: 'person',
         name: 'Person',
-        component: Person,
-      },
-      {
-        path: 'book',
-        name: 'Book',
-        component: Book,
-      },
-      {
-        path: 'news',
-        name: 'News',
-        component: News,
-      },
-      {
-        path: 'orders',
-        name: 'Orders',
-        component: Orders,
-      },
-      {
-        path: 'audit',
-        name: 'Audit',
-        component: Audit,
-      },
-
+        component: () => import("../views/Person"),
+      }
     ]
   },
   {
@@ -56,7 +24,7 @@ const routes = [
   {
     path: '/404',
     name: '404',
-    component: error,
+    component: () => import("../views/404"),
   },
   {
     path: '/register',

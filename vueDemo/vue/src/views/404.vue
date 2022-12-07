@@ -28,7 +28,7 @@ export default {
   },
   methods: {
     handleGoMain() {
-      this.$router.push({path: '/user'})
+      this.$router.push({path: '/person'})
     }
   },
 }

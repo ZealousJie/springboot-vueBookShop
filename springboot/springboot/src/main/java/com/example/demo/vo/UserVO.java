@@ -1,5 +1,6 @@
 package com.example.demo.vo;
 
+import com.example.demo.entity.Permission;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @ author zealousJie
@@ -43,4 +45,6 @@ public class UserVO implements Serializable {
     private Integer state;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date creation;
+
+    private List<Permission> permissionList;
 }

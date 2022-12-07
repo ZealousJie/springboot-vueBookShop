@@ -12,6 +12,7 @@ import com.example.demo.vo.UserVO;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Map;
  * @ version 1.0
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class RoleManagerServiceImpl implements RoleManagerService {
     @Resource
     private RoleMapper roleMapper;
@@ -58,12 +60,18 @@ public class RoleManagerServiceImpl implements RoleManagerService {
         return rolePageInfo;
     }
 
+    @Override
+    public void deleteRoleBatch(List<String> ids) {
+        roleMapper.deleteBatchIds(ids);
+    }
+
     /**
      * 构建userNum
      * @param userNum
      */
     private void findUserRole(Map<String,Integer> userNum){
-        List<UserVO> userVOList = userService.findUsers(new SearchForm());
+        PageInfo<UserVO> users = userService.findUsers(new SearchForm());
+        List<UserVO> userVOList = users.getList();
         userVOList.forEach(userVO -> {
             List<Map<String, String>> roles = userVO.getRoles();
             for (Map<String, String> role : roles) {

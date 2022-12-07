@@ -5,6 +5,8 @@ import com.example.demo.vo.RoleVO;
 import com.github.pagehelper.PageInfo;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @ author zealousJie
  * @ version 1.0
@@ -12,4 +14,6 @@ import org.springframework.stereotype.Service;
 public interface RoleManagerService {
 
     PageInfo<RoleVO> findRolesByPage(SearchForm searchForm);
+
+    void deleteRoleBatch(List<String> ids);
 }

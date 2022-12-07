@@ -19,21 +19,30 @@
     <div style="margin: 10px 0">
       <el-input v-model="search" placeholder="请输入关键字" style="width: 20%;"></el-input>
       <el-button type="primary" style="margin-left: 5px" @click="load()">搜索</el-button>
+      <el-button type="danger" @click="balchDelete(tableChecked)">
+        <i class="el-icon-delete"></i>批量删除
+      </el-button>
+
     </div>
     <el-table :data="tableData" style="width: 99%;" stripe border>
+      <el-table-column type="selection" width="35px"/>
       <!--      sortable 加了个可以排序的东东 prop name label value-->
-      <el-table-column prop="uid" label="ID" sortable  align="center"/>
+      <el-table-column prop="uid" label="ID" sortable width="135px" align="center"/>
       <el-table-column prop="account" label="账号"  align="center"/>
       <el-table-column prop="password" label="密码" align="center"/>
       <el-table-column prop="realName" label="姓名"  align="center"/>
       <el-table-column prop="age" label="年龄" sortable  align="center" width="80px"/>
       <el-table-column prop="sex" label="性别"  align="center" width="50px">
-        <template #default="scope">
-          <span v-if="scope.row.sex === 0">女</span>
-          <span v-if="scope.row.sex === 1">男</span>
+      </el-table-column>
+      <el-table-column :show-overflow-tooltip="true" prop="" label="角色" align="center">
+        <template #default="scope" >
+          <span style="margin-right: 5px; word-wrap: break-word"
+          v-for="(items,index) in scope.row.roles"
+          :key="index">
+            {{ items.name + ''}}
+          </span>
         </template>
       </el-table-column>
-      <el-table-column prop="roles" label="角色" width="100px" align="center"/>
       <el-table-column prop="phone" label="联系电话" align="center"/>
       <el-table-column prop="state" label="账号状态" align="center" >
         <template #default="scope">
@@ -127,9 +136,10 @@ export default {
       pageSize: 10,
       total: 0,
       search: '',
-      tableData: [
-
-      ]
+      searchForm: '',
+      tableData: [],
+      tableChecked: [],
+      ids: []
     }
   },
   created() { // 页面加载时就执行的方法
@@ -160,15 +170,17 @@ export default {
     },
     //查询方法
     load(){
-      request.get("/user",{ //get请求不能直接传一个对象当做参数 需要这样写
-        params:{
-          pageNum: this.currentPage,
-          pageSize: this.pageSize,
-          search: this.search
-        }
-      }).then(res =>{
+      this.searchForm = {
+        rows: this.pageSize,
+        page: this.currentPage,
+        sort: null,
+        order: false,
+        search: this.search
+      }
+      //get请求不能直接传一个对象当做参数 需要这样写
+      request.post("/user/findUserPage",this.searchForm).then(res =>{
         console.log(res)
-        this.tableData= res.data.records
+        this.tableData= res.data.list
         this.total = res.data.total
       })
     },
@@ -201,9 +213,7 @@ export default {
       }
       else {//add
         request.post("/user", this.form).then(res =>{
-          console.log(res);
           if (res.code === '0'){
-            //element ui 提供的提示框
             this.$message({
               type: "success",
               message: "新增成功"
@@ -221,6 +231,25 @@ export default {
 
       }
     },
+    balchDelete(rows) {
+      if (rows.length <= 0) {//选中0条数据时
+        this.$message.info("未选中数据");
+      }
+      rows.forEach((element) => {//选中多条数据时
+        this.ids.push(element.id);
+        this.del();
+      });
+    },
+    del(){
+      request.post("/role/deleteRole",this.ids).then(res => {
+        if (res.code === '0'){
+          this.$message({
+            type: "success",
+            message: "删除成功"
+          })
+        }
+      })
+    },
     //编辑
     handleClick(row){
       this.form=JSON.parse(JSON.stringify(row)) //这一步将数据转来转去的操作能将要展示的数据搞成一个独立的对象
@@ -228,8 +257,8 @@ export default {
       this.dialogVisible=true
     },
     handleDelete(uid){
-      request.delete("/user/"+uid).then(res =>{
-        console.log(res)
+      this.ids.push(uid)
+      request.post("/role/deleteRole",this.ids).then(res =>{
         if (res.code === '0'){
           //element ui 提供的提示框
           this.$message({

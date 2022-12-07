@@ -6,21 +6,32 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.demo.common.BuildVo;
 import com.example.demo.common.Result;
 import com.example.demo.common.SearchForm;
 import com.example.demo.common.exception.CustomException;
+import com.example.demo.entity.Permission;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
+import com.example.demo.mapper.PermissionMapper;
 import com.example.demo.mapper.RoleMapper;
 import com.example.demo.mapper.UserMapper;
 import com.example.demo.service.UserService;
+import com.example.demo.utils.CookieUtil;
 import com.example.demo.utils.JsonUtil;
 import com.example.demo.vo.RegisterVO;
 import com.example.demo.vo.UserVO;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @ author zealousJie
@@ -33,23 +44,53 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
     @Resource
     private RoleMapper roleMapper;
-
+    @Resource
+    private PermissionMapper permissionMapper;
+    @Resource
+    private RedisTemplate redisTemplate;
     /**
      * 用户账号登录
-     * 还要加redis
+     * 还要加redis 做token
      * @param user
      * @return
      */
     @Override
-    public Result<?> accountLogin(User user) {
+    public UserVO accountLogin(User user,HttpServletResponse response,HttpServletRequest request) {
         LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
                 .eq(User::getAccount, user.getAccount()).eq(User::getPassword, user.getPassword());
         User selectedUser = userMapper.selectOne(wrapper);
         if(selectedUser == null){
-            throw new CustomException("用户不存在");
+            throw new CustomException("用户不存在或密码错误");
         }
-        return Result.success(selectedUser);
+        String roleIds = selectedUser.getRoleIds();
+        List<String> roleIdsList = JsonUtil.fromJsonList(roleIds);
+        List<Permission> permissionList = new ArrayList<>();
+        //set集合去重
+        Set<String> perIdListAll = new HashSet<>();
+        if (!roleIdsList.isEmpty()){
+            for (String roleId : roleIdsList) {
+                //通过roleId查出对应的per_id 循环里有查询 记得优化一下
+                List<String> perIdList = permissionMapper.getPerIdByRoleId(roleId);
+                perIdListAll.addAll(perIdList);
+            }
+        }
+        for (String perId : perIdListAll) {
+            Permission permission = permissionMapper.selectById(perId);
+            permissionList.add(permission);
+        }
+        //排序
+        List<Permission> permissions = permissionList.stream().sorted(Comparator.comparing(Permission::getPerId))
+                .collect(Collectors.toList());
+        UserVO userVO = BuildVo.userVoBuild(permissions, selectedUser);
+        String userTicket = IdUtil.simpleUUID();
+        //将用户信息存入redis
+//        redisTemplate.opsForValue().set("user:"+userTicket,userVO);
+        //将标识存入cookie
+        CookieUtil.setCookie(request,response,"userTicket",userTicket);
+        return userVO;
     }
+
+
 
     /**
      * 用户注册
@@ -160,8 +201,11 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<UserVO> findUsers(SearchForm searchForm) {
+    public PageInfo<UserVO> findUsers(SearchForm searchForm) {
         List<UserVO> userVOS = new ArrayList<>();
+        if (searchForm.getPage() != null && searchForm.getRows() != null){
+            PageHelper.startPage(searchForm.getPage(),searchForm.getRows());
+        }
         List<User> users = userMapper.findUsersAll(searchForm);
         if (users != null){
             users.forEach(user -> {
@@ -194,7 +238,18 @@ public class UserServiceImpl implements UserService {
                         .state(user.getState()).build());
             });
         }
-        return userVOS;
+        PageInfo userVOPageInfo = new PageInfo<>(users);
+        userVOPageInfo.setList(userVOS);
+        return userVOPageInfo;
+    }
+
+    @Override
+    public User getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse) {
+        User user = (User) redisTemplate.opsForValue().get("user:" + userTicket);
+        if (user == null) {
+            throw new CustomException("cookie异常");
+        }
+        return user;
     }
 
 

@@ -2,7 +2,7 @@
   <div style="padding: 10px">
     <!--    功能区域-->
     <div style="margin: 10px 0">
-      <el-button type="primary" @click="add">上架</el-button>
+      <el-button type="primary" @click="add">新增角色</el-button>
       <el-button type="primary">导入</el-button>
       <el-button type="primary">导出</el-button>
     </div>
@@ -10,35 +10,43 @@
     <div style="margin: 10px 0">
       <el-input v-model="search" placeholder="请输入关键字" style="width: 20%;"></el-input>
       <el-button type="primary" style="margin-left: 5px" @click="load()">搜索</el-button>
+      <el-button type="danger" @click="deleteRole()">
+        <i class="el-icon-delete"></i>批量删除
+      </el-button>
     </div>
-    <el-table :data="tableData" style="width: 99%;margin-left: 0px" stripe border>
-      <!--      sortable 加了个可以排序的东东 prop name label value-->
-      <el-table-column prop="bid" label="序号" sortable width="80px" align='center'/>
-      <el-table-column prop="bookName" label="书名" width="150px" align='center'/>
-      <el-table-column prop="price" label="价格" width="100px" align='center'/>
-      <el-table-column prop="createTime" label="上架时间" width="150px" align='center'/>
-      <el-table-column prop="author" label="作者" width="100px" align='center'/>
-      <el-table-column prop="stock" label="库存" width="100px" align='center'/>
-      <el-table-column prop="state" label="上架情况" width="100px" align='center'/>
-      <el-table-column
-          label="封面" width="120px" align='center'>
+    <el-table :data="tableData" style="width: 99%;margin-left: 0px"
+              stripe border ref="singleTable"
+              tooltip-effect="dark"
+              @selection-change="handleSelectionChange">
+      <el-table-column type="index"/>
+      <el-table-column type="selection"/>
+      <el-table-column prop="rid" label="编号" align='center'/>
+      <el-table-column prop="roleName" label="角色名" width="150px"  align='center'/>
+      <el-table-column prop="isSystem" label="是否为系统角色" align="center" >
         <template #default="scope">
-<!--     preview-teleported="true" 解决图片被切割     -->
-          <el-image
-              preview-teleported="true"
-              style="width: 100px; height: 100px"
-              :src="scope.row.cover"
-              :preview-src-list="[scope.row.cover]">
-          </el-image>
+          <span v-if="scope.row.isSystem === 1">系统角色</span>
+          <span v-if="scope.row.isSystem === 0">非系统角色</span>
         </template>
       </el-table-column>
+      <el-table-column prop="description" label="描述" align='center'/>
+<!--      <el-table-column-->
+<!--          label="封面" width="120px" align='center'>-->
+<!--        <template #default="scope">-->
+<!--&lt;!&ndash;     preview-teleported="true" 解决图片被切割     &ndash;&gt;-->
+<!--          <el-image-->
+<!--              preview-teleported="true"-->
+<!--              style="width: 100px; height: 100px"-->
+<!--              :src="scope.row.cover"-->
+<!--              :preview-src-list="[scope.row.cover]">-->
+<!--          </el-image>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
       <el-table-column fixed="right" label="操作" align='center'>
         <template #default="scope">
-          <el-button size="small" @click="handleClick(scope.row)" icon="edit" :disabled="scope.row.state !=='已上架'">编辑</el-button>
-          <el-button size="small" @click="handleOrder(scope.row.bid)" type="success" icon="sell" :disabled="scope.row.state !=='已上架'">购买测试</el-button>
-          <el-popconfirm title="确定要删除吗" @confirm="handleDelete(scope.row.bid)">
+          <el-button size="small" @click="handleClick(scope.row)" icon="edit">编辑</el-button>
+          <el-popconfirm title="确定要删除吗" @confirm="this.delete(scope.row.rid)">
             <template #reference>
-              <el-button size="small" type="danger" icon="delete" :disabled="scope.row.state !=='已上架'">下架</el-button>
+              <el-button size="small" type="danger" icon="delete" :disabled="scope.row.isSystem == 1">删除</el-button>
             </template>
           </el-popconfirm>
         </template>
@@ -61,27 +69,27 @@
 <!--编辑修改弹出框-->
       <el-dialog v-model="dialogVisible" title="提示" width="30%">
         <el-form :model="form" label-width="120px">
-          <el-form-item label="书名">
-            <el-input v-model="form.bookName" style="width: 80%;"></el-input>
+          <el-form-item label="角色名">
+            <el-input v-model="form.roleName" style="width: 80%;"></el-input>
           </el-form-item>
-          <el-form-item label="价格">
+          <el-form-item label="角色描述">
             <el-input v-model="form.price" style="width: 80%;"></el-input>
           </el-form-item>
-          <el-form-item label="出版时间">
+          <el-form-item label="角色权限">
             <el-input v-model="form.createTime" style="width: 80%;"></el-input>
           </el-form-item>
-          <el-form-item label="作者">
-            <el-input v-model="form.author" style="width: 80%;"></el-input>
+          <el-form-item label="是否为系统角色">
+            <el-radio-group v-model="form.isSystem">
+              <el-radio :label="1">系统角色</el-radio>
+              <el-radio :label="0">非系统角色</el-radio>
+            </el-radio-group>
           </el-form-item>
-          <el-form-item label="库存">
-            <el-input v-model="form.stock" style="width: 80%;"></el-input>
-          </el-form-item>
-          <el-form-item label="封面">
-<!--        :on-success 上传成功后的回调方法    -->
-            <el-upload ref="upload" action="http://localhost:9090/files/upload" :on-success="filesUploadSuccess">
-              <el-button type="primary">点击上传</el-button>
-            </el-upload>
-          </el-form-item>
+<!--          <el-form-item label="封面">-->
+<!--&lt;!&ndash;        :on-success 上传成功后的回调方法    &ndash;&gt;-->
+<!--            <el-upload ref="upload" action="http://localhost:9090/files/upload" :on-success="filesUploadSuccess">-->
+<!--              <el-button type="primary">点击上传</el-button>-->
+<!--            </el-upload>-->
+<!--          </el-form-item>-->
         </el-form>
 
         <template #footer>
@@ -120,13 +128,15 @@
 
 import request from "../utils/request";
 
+
 export default {
-  name: 'Book',
+  name: 'Role',
   components: {
   },
   data(){
     return{
       form: {},
+      searchForm: {},
       orderForm: {
         goodsId: 0,
         num: 1
@@ -136,11 +146,11 @@ export default {
       currentPage: 1,
       pageSize: 10,
       total: 0,
-      search: '',
       // filesUploadUrls: "http://" + window.server.filesUploadUrl + ":9090/files/upload",
-      tableData: [
-
-      ]
+      tableData: [],
+      search: '',
+      selection: [],
+      ids: []
     }
   },
   created() { // 页面加载时就执行的方法
@@ -153,15 +163,12 @@ export default {
     },
     //查询方法
     load(){
-      request.get("/book",{ //get请求不能直接传一个对象当做参数 需要这样写
-        params:{
-          pageNum: this.currentPage,
-          pageSize: this.pageSize,
-          search: this.search
-        }
-      }).then(res =>{
+      this.searchForm.page=this.currentPage
+      this.searchForm.rows=this.pageSize
+      this.searchForm.search=this.search
+      request.post("/role/findRoles",this.searchForm).then(res =>{
         console.log(res)
-        this.tableData= res.data.records
+        this.tableData= res.data.list
         this.total = res.data.total
       })
     },
@@ -195,13 +202,13 @@ export default {
         })
       }
       else {//add
-        request.post("/book", this.form).then(res =>{
+        request.post("/role/addRole", this.form).then(res =>{
           console.log(res);
           if (res.code === '0'){
             //element ui 提供的提示框
             this.$message({
               type: "success",
-              message: "上架成功"
+              message: "新增成功"
             })
           }
           else {
@@ -249,15 +256,50 @@ export default {
       //这里的form有id
       this.dialogVisible=true
     },
-    handleDelete(id){
-      console.log(id)
-      request.delete("/book/"+id).then(res =>{
+    deleteRole() {
+      if (this.selection.length === 0) {//选中0条数据时
+        this.$message.info("未选中数据");
+        return;
+      }
+      this.selection.forEach( element => {
+        this.ids.push(element.rid)
+      })
+
+      let params = {
+        ids: this.ids
+      }
+      this.handleDelete(params)
+    },
+    handleDelete(params){
+      console.log(params)
+      request.post("/role/deleteRole",params).then(res =>{
         console.log(res)
         if (res.code === '0'){
-          //element ui 提供的提示框
           this.$message({
             type: "success",
-            message: "下架成功"
+            message: "删除成功"
+          })
+        }
+        else {
+          this.$message({
+            type: "error",
+            message: res.msg
+          })
+        }
+        this.load()
+      })
+    },
+    delete(id){
+      this.ids.push(id)
+      let params = {
+        ids: this.ids
+      }
+      request.post("/role/deleteRole",params).then(res =>{
+        console.log(res)
+        if (res.code === '0'){
+          this.$message({
+            type: "success",
+            message: "删除成功"
           })
         }
         else {
@@ -276,7 +318,11 @@ export default {
     handleCurrentChange(pn){
       this.currentPage=pn
       this.load()
-    }
+    },
+    handleSelectionChange(val){
+      this.selection = val;
+    },
+
   }
 }
 </script>

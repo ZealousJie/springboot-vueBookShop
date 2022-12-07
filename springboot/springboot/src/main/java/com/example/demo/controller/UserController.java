@@ -2,14 +2,9 @@ package com.example.demo.controller;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
 import com.example.demo.common.SearchForm;
 import com.example.demo.entity.User;
@@ -17,10 +12,10 @@ import com.example.demo.mapper.UserMapper;
 import com.example.demo.service.UserService;
 import com.example.demo.vo.RegisterVO;
 import com.example.demo.vo.UserVO;
+import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -77,10 +72,19 @@ public class UserController {
 
 
 
-    @GetMapping//查询
+    @PostMapping("/findUserPage")//查询
     public Result<?> findUserPage(@RequestBody SearchForm searchForm){
-        List<UserVO> usersList = userService.findUsers(searchForm);
-        return Result.success(usersList);
+        Result result = null;
+        try {
+            PageInfo<UserVO> users = userService.findUsers(searchForm);
+            result = Result.success(users);
+            log.info("findUsers success info,result = {}",users);
+        }catch (Exception e){
+            result = Result.error("1",e.getLocalizedMessage());
+            log.warn("findUsers error info",e);
+        }
+
+        return result;
     }
 
     @PostMapping (value = "/updateUser")

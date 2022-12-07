@@ -8,24 +8,22 @@
 
         router
         class="el-menu-vertical-demo">
-      <el-sub-menu index="1">
-        <template #title>系统管理</template>
-        <el-menu-item index="/user">用户管理</el-menu-item>
-      </el-sub-menu>
-      <el-menu-item index="/book">上架书籍管理</el-menu-item>
-      <el-menu-item index="/news">公告管理</el-menu-item>
-      <el-menu-item index="/orders">订单管理</el-menu-item>
-      <el-menu-item index="/audit">书籍审核管理</el-menu-item>
+      <el-menu-item :index="m.path" v-for="m in user.permissionList" :key="m.perId">
+        <i :class="m.icon"></i> {{ m.comment }}
+      </el-menu-item>
+
     </el-menu>
   </div>
 </template>
 
 <script>
+import Cookies from 'js-cookie';
 export default {
   name: "Aside",
   data() {
     return {
-      path: this.$route.path
+      path: this.$route.path,
+      user: JSON.parse(Cookies.get("user"))
     }
   }
 }

@@ -2,8 +2,12 @@ package com.example.demo.common.config;
 
 import com.example.demo.interceptors.LogInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @ author zealousJie
@@ -12,10 +16,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    @Resource
+    private UserArgumentResolver userArgumentResolver;
+
+// 一个开关 你懂的
 //    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(new LogInterceptor())
-//                .excludePathPatterns("/user/accountLogin","/user/emailLogin","/user/email/{email}","/user/register");
-//
+//    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+//        resolvers.add(userArgumentResolver);
 //    }
 }

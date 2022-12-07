@@ -6,10 +6,13 @@ import com.example.demo.common.SearchForm;
 import com.example.demo.entity.User;
 import com.example.demo.vo.RegisterVO;
 import com.example.demo.vo.UserVO;
+import com.github.pagehelper.PageInfo;
 import org.apache.poi.ss.formula.functions.T;
 import org.apache.xmlgraphics.io.Resource;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -18,9 +21,10 @@ import java.util.List;
  */
 
 public interface UserService {
-    Result<?> accountLogin(User user);
+    UserVO accountLogin(User user,HttpServletResponse response,HttpServletRequest request);
     Result<?> userRegister(RegisterVO registerVO);
     Result<?> insertUser(UserVO user);
     Result<?> updateUser(UserVO user);
-    List<UserVO> findUsers(SearchForm searchForm);
+    PageInfo<UserVO> findUsers(SearchForm searchForm);
+    User getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse);
 }
