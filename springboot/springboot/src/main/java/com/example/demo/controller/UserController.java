@@ -27,6 +27,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * 可以每个接口加一个@LoginUser注解做权限认证
+ */
 @RestController
 @RequestMapping("/user")
 @CrossOrigin

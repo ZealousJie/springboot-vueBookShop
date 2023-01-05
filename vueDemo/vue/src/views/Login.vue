@@ -70,7 +70,9 @@
 import request from "../utils/request.js";
 import ValidCode from "../components/ValidCode";
 import Cookies from 'js-cookie';
-import {activeRouter} from "@/utils/permission";
+import Layout from "@/layout/Layout";
+import router1 from "@/router";
+import {activeRouter} from "@/router/permission";
 
 export default {
   name: "Login",
@@ -150,13 +152,9 @@ export default {
                 type: "success",
                 message: "登录成功"
               })
-              // sessionStorage.setItem("uuid", JSON.stringify(res.data.uid))  // 缓存用户信息
               Cookies.set('user', JSON.stringify(res.data))
-              let permissions = res.data.permissionList
-              // 登录成功的时候更新当前路由
-              activeRouter(permissions)
-              this.$router.push("/person")  //登录成功之后进行页面的跳转，跳转到主页
-
+              activeRouter()
+              this.$router.push("/")  //登录成功之后进行页面的跳转，跳转到主页
             } else {
               this.$message({
                 type: "error",
@@ -187,7 +185,7 @@ export default {
           })
         }
       })
-    }
+    },
   }
 }
 </script>

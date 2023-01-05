@@ -26,5 +26,5 @@ public interface UserService {
     Result<?> insertUser(UserVO user);
     Result<?> updateUser(UserVO user);
     PageInfo<UserVO> findUsers(SearchForm searchForm);
-    User getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse);
+    Result getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse);
 }

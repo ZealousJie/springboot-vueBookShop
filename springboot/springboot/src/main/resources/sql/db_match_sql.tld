@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dbsqls db_type="mysql">
+    <sql comment="邹杰赛事组织数据库初始搭建" author="zj" datatime="2022-12-9" databaseId="mysql">
+        CREATE TABLE `match_event` (
+        `id` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '赛事id',
+        `event_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '赛事名',
+        `event_project` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '赛事项目',
+        `event_onlineType` tinyint(25) DEFAULT NULL COMMENT '是否为线上比赛',
+        `event_teamOrPersonal` tinyint(25) DEFAULT NULL COMMENT '是否为个人赛',
+        `event_type` tinyint(25) DEFAULT NULL COMMENT '比赛类型 游戏还是体育',
+        `event_stage` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '赛事阶段',
+        `event_entrants` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '赛事报名团队/团队赛就用这个',
+        `event_venue` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '赛事地点',
+        `
+        unitPrice` decimal(10,0) DEFAULT NULL COMMENT '单人票价（线上一般没有）',
+        `remaining_tickets` bigint(255) DEFAULT NULL COMMENT '剩余票数',
+        `bonus` decimal(10,0) DEFAULT NULL COMMENT '奖金',
+        `organizer` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '举办方',
+        `event_attentionState` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+        `event_state` tinyint(10) DEFAULT NULL,
+        PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    </sql>
+</dbsqls>
+

@@ -206,7 +206,8 @@ public class UserServiceImpl implements UserService {
         if (searchForm.getPage() != null && searchForm.getRows() != null){
             PageHelper.startPage(searchForm.getPage(),searchForm.getRows());
         }
-        List<User> users = userMapper.findUsersAll(searchForm);
+        searchForm.setColumn("real_name");
+        List<User> users = userMapper.findUsersByCondition(searchForm);
         if (users != null){
             users.forEach(user -> {
                 //构建角色id-id号 name-角色名键值对
@@ -244,12 +245,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse) {
+    public Result getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse) {
         User user = (User) redisTemplate.opsForValue().get("user:" + userTicket);
+        Result result;
         if (user == null) {
-            throw new CustomException("cookie异常");
+           result = Result.error("0","用户授权已过期");
         }
-        return user;
+        result = Result.success(user);
+        return result;
     }
 
 

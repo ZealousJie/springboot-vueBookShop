@@ -38,4 +38,6 @@ public class SearchForm{
      */
     private String search;
 
+    private String column;
+
 }

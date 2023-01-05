@@ -41,20 +41,8 @@
     <select id="findUsersByCondition" resultType="com.example.demo.entity.User">
         select <include refid="userArgs"/> from match_user
         <if test="column != null and column != '' and search != null and search != ''">
-            where #{column} like concat ('%',#{search},'%')
+            where ${column} like concat ('%',#{search},'%')
         </if>
-        <if test="sortColumn != null and sortColumn != ''">
-            order by #{sortColumn}
-            <if test="asc == false">
-                desc
-            </if>
-        </if>
-        <if test="sortColumn == null">
-            order by creation
-        </if>
-    </select>
-    <select id="findUsersAll" resultType="com.example.demo.entity.User">
-        select <include refid="userArgs"/> from match_user
         <if test="sort != null and sort != ''">
             order by #{sort}
             <if test="order == false">

@@ -1,6 +1,7 @@
 package com.example.demo.common.config;
 
 import cn.hutool.core.util.StrUtil;
+import com.example.demo.common.Result;
 import com.example.demo.common.annotation.LoginUser;
 import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
@@ -45,16 +46,17 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         HttpServletResponse nativeResponse = webRequest.getNativeResponse(HttpServletResponse.class);
         String userTicket = CookieUtil.getCookieValue(nativeRequest, "userTicket");
         if (!StrUtil.isNotBlank(userTicket)) {
-            return null;
+            return Result.error("0","您未登录");
         }
+        Result result;
         //改方法待写
-        User userByCookie = new User();
         try {
-            userByCookie = userService.getUserByCookie(userTicket, nativeRequest, nativeResponse);
+             result = userService.getUserByCookie(userTicket, nativeRequest, nativeResponse);
         } catch (Exception e) {
+            result = Result.error("0","服务器异常");
             log.warn(e.getLocalizedMessage());
         }
-        return userByCookie;
+        return result;
     }
 
 }

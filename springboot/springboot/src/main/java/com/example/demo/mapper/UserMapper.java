@@ -10,6 +10,5 @@ import java.util.List;
 
 public interface UserMapper extends BaseMapper<User> {
     int deleteByUid(String uid);
-    List<User> findUsersAll(SearchForm searchForm);
     List<User> findUsersByCondition(SearchForm searchForm);
 }

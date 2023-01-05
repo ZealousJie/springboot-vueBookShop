@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.EventMapper">
+
+
+    <sql id="eventArgs">
+        id,
+        event_name,
+        event_project,
+        event_onlineType,
+        event_teamOrPersonal,
+        event_type,
+        event_stage,
+        event_entrants,
+        event_venue,
+        unit_price,
+        remaining_tickets,
+        bonus,
+        organizer,
+        event_state,
+        event_createTime
+    </sql>
+
+
+
+    <select id="queryEvent" resultType="com.example.demo.entity.Event">
+        select <include refid="eventArgs"/> from match_event
+        <where>
+            <if test=" eventName != null and eventName != ''">
+                event_name like CONCAT('%',#{eventName},'%')
+            </if>
+            <if test=" eventProject != null and eventProject != ''">
+                event_project = #{eventProject}
+            </if>
+            <if test="eventOnlineType != null and eventOnlineType != ''">
+                event_onlineType = #{eventOnlineType}
+            </if>
+            <if test="eventTeamOrPersonal != null and eventTeamOrPersonal != ''">
+                event_teamOrPersonal = #{eventTeamOrPersonal}
+            </if>
+            <if test="eventType != null and eventType != ''">
+                event_type = #{eventType}
+            </if>
+        </where>
+        order by event_createTime
+    </select>
+
+    <delete id="deleteByUid" parameterType="String">
+        delete from match_user where uid=#{uid}
+    </delete>
+</mapper>

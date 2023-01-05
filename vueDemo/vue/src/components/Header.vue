@@ -37,6 +37,7 @@ export default {
   methods: {
     logout(){
       Cookies.remove('user');
+      Cookies.remove('userTicket');
       this.$router.push('/login')
     },
     load(){
