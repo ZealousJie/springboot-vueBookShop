@@ -40,6 +40,7 @@ public class UserVO implements Serializable {
     private String sex;
     private String identityNum;
     private List<Map<String,String>> roles;
+    private List<String> roleList;
     private String avatar;
     //ApiModelProperty("用户账号状态(0: 封禁;1: 正常;-1: 未激活)")
     private Integer state;
@@ -47,4 +48,8 @@ public class UserVO implements Serializable {
     private Date creation;
 
     private List<Permission> permissionList;
+
+    private List<Integer> roleIds;
+
+    private String msg;
 }

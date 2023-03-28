@@ -21,7 +21,7 @@ public class Permission implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @TableId
-    private String perId;
+    private Integer perId;
     private String name;
     private String path;
     private String comment;

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import router1 from "@/router";
 
 
 const request1 = axios.create({
@@ -26,6 +27,10 @@ request1.interceptors.response.use(
         if (typeof res === 'string') {
             res = res ? JSON.parse(res) : res
         }
+        let data = response.data;
+        //只要前台被拦截的请求里面含这两个参数，那么就跳转到登录界面
+        if(!data.success && data.msg==="NoUser")
+            router1.push("/login")
         return res;
     },
     error => {

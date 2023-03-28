@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,13 +15,12 @@ import java.util.Date;
 @TableName("match_attribute")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Data
 public class EventAttribute {
 
-    private String id;
     private String eventId;
     private String attributeName;
-    private Date attributeTime;
     private String attributeValue;
-    private String code;
+    private Integer code;
 }

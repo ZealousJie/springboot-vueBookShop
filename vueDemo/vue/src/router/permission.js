@@ -11,7 +11,7 @@ export function activeRouter() {
             path: '/',
             name: 'Layout',
             component: Layout,
-            redirect: "/person",
+            redirect: "/index",
             children: []
         }
         user.permissionList.forEach(p => {

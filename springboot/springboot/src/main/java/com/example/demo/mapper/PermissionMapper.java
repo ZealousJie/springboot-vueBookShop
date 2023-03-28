@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.example.demo.entity.Permission;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,5 +13,9 @@ import java.util.List;
  */
 public interface PermissionMapper extends BaseMapper<Permission> {
 
-    List<String> getPerIdByRoleId(@Param("roleId") String roleId);
+    ArrayList<Integer> getPerIdByRoleId(@Param("roleId") String roleId);
+    List<Permission> getPerByRoleId(@Param("roleId") String roleId);
+    int deleteByRoleId(@Param("roleId") String roleId);
+
+    int insertBatch(@Param("roleId") String roleId,@Param("perList") ArrayList<Integer> perList);
 }

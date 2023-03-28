@@ -7,13 +7,20 @@ import cn.hutool.poi.excel.ExcelUtil;
 import cn.hutool.poi.excel.ExcelWriter;
 import com.example.demo.common.Result;
 import com.example.demo.common.SearchForm;
+import com.example.demo.common.annotation.LoginUser;
+import com.example.demo.common.dto.IdListDto;
+import com.example.demo.entity.Event;
 import com.example.demo.entity.User;
 import com.example.demo.mapper.UserMapper;
+import com.example.demo.service.EventService;
+import com.example.demo.service.RoleManagerService;
 import com.example.demo.service.UserService;
 import com.example.demo.vo.RegisterVO;
+import com.example.demo.vo.ResponseVO;
 import com.example.demo.vo.UserVO;
 import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
@@ -41,6 +48,8 @@ public class UserController {
     UserMapper userMapper;
     @Resource
     UserService userService;
+    @Resource
+    EventService eventService;
 
     @PostMapping("/emailLogin")//
     public Result<?> emailLogin(@RequestBody User user){
@@ -64,8 +73,8 @@ public class UserController {
     }
 
 
-    @PostMapping
-    public Result<?> save(@RequestBody UserVO userVO){
+    @PostMapping(value = "addUser")
+    public Result<?> addUser(@RequestBody UserVO userVO){
         boolean flag = checkingUserVO(userVO);
         if (!flag){
             return Result.error("1","账号信息缺失或不规范 无法新增");
@@ -93,16 +102,68 @@ public class UserController {
 
     @PostMapping (value = "/updateUser")
     public Result<?> update(@RequestBody UserVO userVO){
+        Result<?> result;
         boolean flag = checkingUserVO(userVO);
         if (!flag){
             return Result.error("1","更新后的信息不和规范");
         }
-        return userService.updateUser(userVO);
+
+        try {
+            userService.updateUser(userVO);
+            log.info("success");
+            result=Result.success();
+        }catch (Exception e){
+            result = Result.error("1","更新失败");
+        }
+        return result;
     }
-    @DeleteMapping("/{uid}")
-    public Result<?> delete(@PathVariable String uid){
-        userMapper.deleteByUid(uid);
-        return Result.success();
+    @PutMapping (value = "/updateUserPerson")
+    public Result<?> updateUserPerson(@RequestBody UserVO userVO){
+        Result<?> result;
+        boolean flag = checkingUserVO(userVO);
+        if (!flag){
+            return Result.error("1","更新后的信息不和规范");
+        }
+
+        try {
+            userService.updateUserPerson(userVO);
+            log.info("success");
+            result=Result.success();
+        }catch (Exception e){
+            log.error("error {}",e.getLocalizedMessage());
+            result = Result.error("1","更新失败");
+        }
+        return result;
+    }
+    @PostMapping("/deleteUser")
+    public Result<?> delete(@RequestBody @Validated IdListDto idList){
+        Result<?> result = null;
+        try {
+            userMapper.deleteBatchIds(idList.getIds());
+            result = Result.success();
+            log.info("deleteRole success info, result = {}",idList);
+        } catch (Exception e) {
+            result = Result.error("1",e.getLocalizedMessage());
+            log.info("deleteRole warn",e);
+        }
+        return result;
+    }
+
+    @PostMapping("/queryAttentionByUid")
+    public Result<?> queryAttentionByUid(@LoginUser UserVO userVO){
+        Result<?> result = null;
+        if (StrUtil.isNotBlank(userVO.getMsg())){
+            result = Result.error("1",userVO.getMsg());
+        }
+        try {
+            List<Event> events = eventService.queryAttentionByUid(userVO.getUid());
+            result = Result.success(events);
+            log.info("queryAttentionByUid success info, result = {}",userVO);
+        } catch (Exception e) {
+            result = Result.error("1",e.getLocalizedMessage());
+            log.info("queryAttentionByUid warn",e);
+        }
+        return result;
     }
     //hutool 导入导出excel文件
     @GetMapping("/export")
@@ -153,13 +214,7 @@ public class UserController {
         }
         return Result.success();
     }
-    @GetMapping("/books")
-    public Result<?> getUserBooks(){
 
-
-
-        return Result.success();
-    }
 
     public boolean checking(String account,String pwd){
         if (account.length()<11 && StrUtil.isNotBlank(account)){

@@ -6,6 +6,7 @@ import com.example.demo.common.annotation.LoginUser;
 import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import com.example.demo.utils.CookieUtil;
+import com.example.demo.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,8 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         if (parameter.hasParameterAnnotation(LoginUser.class)){
-            return User.class.isAssignableFrom(parameter.getParameterType());
+            //判断是否为uservo类 是 跳到下一步
+            return UserVO.class.isAssignableFrom(parameter.getParameterType());
         }
         return false;
     }
@@ -45,18 +47,18 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         HttpServletRequest nativeRequest = webRequest.getNativeRequest(HttpServletRequest.class);
         HttpServletResponse nativeResponse = webRequest.getNativeResponse(HttpServletResponse.class);
         String userTicket = CookieUtil.getCookieValue(nativeRequest, "userTicket");
-        if (!StrUtil.isNotBlank(userTicket)) {
-            return Result.error("0","您未登录");
+        if (StrUtil.isBlank(userTicket)) {
+            return UserVO.builder().msg("用户未登录").build();
         }
-        Result result;
+        Result<?> result;
         //改方法待写
         try {
              result = userService.getUserByCookie(userTicket, nativeRequest, nativeResponse);
         } catch (Exception e) {
-            result = Result.error("0","服务器异常");
+            result = Result.success(UserVO.builder().msg("登录异常").build());
             log.warn(e.getLocalizedMessage());
         }
-        return result;
+        return result.getData();
     }
 
 }

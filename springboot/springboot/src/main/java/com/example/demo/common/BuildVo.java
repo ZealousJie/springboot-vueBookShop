@@ -11,7 +11,7 @@ import java.util.List;
  * @ version 1.0
  */
 public class BuildVo {
-    public static UserVO userVoBuild(List<Permission> permissionList, User selectedUser){
+    public static UserVO userVoBuild(List<Permission> permissionList, User selectedUser,List<String> roleList){
         UserVO userVO = UserVO.builder()
                 .permissionList(permissionList)
                 .state(selectedUser.getState())
@@ -27,6 +27,7 @@ public class BuildVo {
                 .uid(selectedUser.getUid())
                 .avatar(selectedUser.getAvatar())
                 .realName(selectedUser.getRealName())
+                .roleList(roleList)
                 .build();
         return userVO;
     }

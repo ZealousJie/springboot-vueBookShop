@@ -25,7 +25,7 @@ public class MD5Util {
      * @date 4:49 下午 2022/3/1
      **/
     public static String inputPassToFromPass(String inputPass) {
-        String str = ""+salt.charAt(0) + salt.charAt(3) + inputPass + salt.charAt(5) + salt.charAt(4);
+        String str = salt.charAt(0) + salt.charAt(3) + inputPass + salt.charAt(5) + salt.charAt(4);
         return md5(str);
     }
 

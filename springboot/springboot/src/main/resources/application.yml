@@ -1,10 +1,17 @@
 server:
   port: 9090
 
+ipserver: 127.0.0.1
+
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 1024MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/match?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8
+    url: jdbc:mysql://localhost:3306/match?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
     password: 123456
     username: root
     hikari:
@@ -36,6 +43,15 @@ spring:
         max-wait: 18000
         max-idle: 280
         min-idle: 5
+  mail:
+    username: 1409109706@qq.com
+    password: vseunaclzmtcgjhc
+    host: smtp.qq.com
+    properties:
+      mail:
+        smtl:
+          ssl:
+            enable: true
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/*Mapper.xml

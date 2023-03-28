@@ -9,6 +9,25 @@
         is_system,
         description
     </sql>
+    <insert id="insertRole">
+        insert into match_role(role_name,is_system,description,creation)
+        values (#{roleName},#{isSystem},#{description},#{creation})
+    </insert>
+    <update id="updateByRId">
+        update match_role
+        <set>
+            <if test="roleName != null and roleName != ''">
+                role_name = #{roleName},
+            </if>
+            <if test="description != null and description != ''">
+               description = #{description},
+            </if>
+            <if test="isSystem != null">
+               is_system = #{isSystem}
+            </if>
+        </set>
+        where rid = #{rid}
+    </update>
 
     <resultMap id="roleMap" type="com.example.demo.entity.Role">
 

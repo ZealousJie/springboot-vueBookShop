@@ -5,11 +5,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
+import com.example.demo.common.annotation.LoginUser;
+import com.example.demo.common.dto.NewEmailDto;
 import com.example.demo.entity.News;
 import com.example.demo.mapper.NewsMapper;
+import com.example.demo.service.NewService;
+import com.example.demo.vo.EventVO;
+import com.example.demo.vo.UserVO;
+import com.github.pagehelper.PageInfo;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
 import java.util.Date;
 
 @RestController
@@ -19,12 +26,15 @@ public class NewsController {
 
     @Resource
     NewsMapper newsMapper;
+    @Resource
+    private NewService newService;
 
-    @PostMapping
-    public Result<?> save(@RequestBody News news) {
-        news.setTime(new Date());
-        newsMapper.insert(news);
-        return Result.success();
+    @PostMapping(value = "sendMail")
+    public Result<?> sendMail(NewEmailDto news, @LoginUser UserVO userVO) throws MessagingException {
+        Result<?> result;
+        newService.sendMail(news,userVO);
+        result= Result.success();
+        return result;
     }
 
     @PutMapping

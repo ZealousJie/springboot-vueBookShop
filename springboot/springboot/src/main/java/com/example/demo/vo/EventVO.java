@@ -1,6 +1,8 @@
 package com.example.demo.vo;
 
 import com.example.demo.entity.EventAttribute;
+import com.example.demo.entity.Team;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -50,7 +52,7 @@ public class EventVO implements Serializable {
     /**
      * 比赛队伍（团队赛专属 json字符串可转 List）
      */
-    private String eventEntrants;
+    private List<Team> eventEntrants;
     /**
      * 赛事地点
      */
@@ -82,5 +84,8 @@ public class EventVO implements Serializable {
 
     private List<EventAttribute> attributeList;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date eventCreateTime;
+
+    private String  eventSpecification;
 }

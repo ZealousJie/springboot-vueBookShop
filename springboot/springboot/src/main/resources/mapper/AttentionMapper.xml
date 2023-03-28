@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.AttentionMapper">
+
+
+
+    <delete id="deleteAttention">
+        delete from match_attention where uid=#{uid} and eventId = #{eventId}
+    </delete>
+
+    <insert id="setAttention">
+        insert into match_attention(uid,eventId) values (#{uid},#{eventId})
+    </insert>
+
+    <select id="getAttention" resultType="java.lang.String">
+        select eventId from match_attention
+        <where>
+            <if test="uid != null and uid !=''">
+                uid = #{uid}
+            </if>
+        </where>
+    </select>
+</mapper>

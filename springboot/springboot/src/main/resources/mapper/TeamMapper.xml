@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.TeamMapper">
+
+    <sql id="teamArgs">
+        team_id,
+        team_name,
+        team_member,
+        event_id
+    </sql>
+
+
+
+    <select id="queryByIds" resultType="com.example.demo.entity.Team">
+        select <include refid="teamArgs"/> from match_team
+        where team_id in
+        <foreach collection="list" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+</mapper>

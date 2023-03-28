@@ -24,7 +24,8 @@ public interface UserService {
     UserVO accountLogin(User user,HttpServletResponse response,HttpServletRequest request);
     Result<?> userRegister(RegisterVO registerVO);
     Result<?> insertUser(UserVO user);
-    Result<?> updateUser(UserVO user);
+    void updateUser(UserVO user);
+    void updateUserPerson(UserVO userVo);
     PageInfo<UserVO> findUsers(SearchForm searchForm);
-    Result getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse);
+    Result<?> getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse);
 }

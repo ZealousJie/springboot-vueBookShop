@@ -1,9 +1,13 @@
 package com.example.demo.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -21,6 +25,8 @@ import java.util.Date;
 public class Event implements Serializable {
     private static final long serialVersionUID = 1L;
 
+
+    @TableId
     private String id;
     /**
      * 赛事名 如 ：湖南理工月莲杯
@@ -33,10 +39,12 @@ public class Event implements Serializable {
     /**
      * 是否是线上比赛 1：线上 0：线下
      */
+    @TableField(value = "event_onlineType")
     private Integer eventOnlineType;
     /**
      * 团队赛还是个人赛 1：团队 0：个人
      */
+    @TableField(value = "event_teamOrPersonal")
     private Integer eventTeamOrPersonal;
     /**
      * 赛事类型 1：电竞 0：体育
@@ -75,5 +83,14 @@ public class Event implements Serializable {
      */
     private Integer eventState;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @TableField(value = "event_createTime")
     private Date eventCreateTime;
+
+    private String parentId;
+
+    private Integer auditState;
+
+    @TableField(value = "teamNumber")
+    private Integer teamNumber;
 }

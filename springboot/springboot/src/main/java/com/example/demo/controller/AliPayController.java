@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.demo.common.config.AliPayConfig;
 //import com.example.demo.controller.dto.AliPay;
 import com.example.demo.entity.Orders;
-import com.example.demo.mapper.BookMapper;
 import com.example.demo.mapper.OrdersMapper;
 import org.springframework.web.bind.annotation.*;
 
@@ -112,8 +111,7 @@ public class AliPayController {
                     order.setAlipayNo(alipayTradeNo);
                     SimpleDateFormat sdf =   new SimpleDateFormat("yyyy-MM-dd HH:mm");
                     Date parse = sdf.parse(gmtPayment);//买家付款时间
-                    order.setPayTime(parse);
-                    order.setState("已支付");
+                    order.setState(2);
                     ordersMapper.updateById(order);
                 }
             }

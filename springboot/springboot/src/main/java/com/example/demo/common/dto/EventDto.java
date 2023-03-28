@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @ author zealousJie
@@ -53,7 +55,7 @@ public class EventDto implements Serializable {
     /**
      * 单人票价
      */
-    private BigDecimal unitPrice;
+    private Integer unitPrice;
     /**
      * 剩余票数
      */
@@ -61,7 +63,7 @@ public class EventDto implements Serializable {
     /**
      * 赛事奖金
      */
-    private BigDecimal bonus;
+    private Integer bonus;
     /**
      * 举办方代表人id 或组织人id
      */
@@ -74,4 +76,12 @@ public class EventDto implements Serializable {
      * 赛事状态 1:进行中 0：未开始 2：已结束
      */
     private Integer eventState;
+
+    private Integer pageNum;
+
+    private  Integer pageSize;
+
+
+    private List<Date> eventDuration;
+
 }

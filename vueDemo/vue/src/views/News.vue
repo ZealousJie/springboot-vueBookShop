@@ -2,78 +2,68 @@
   <div style="padding: 10px">
     <!--    功能区域-->
     <div style="margin: 10px 0">
-      <el-button type="primary" @click="add">新增</el-button>
-      <el-upload
-          action="http://localhost:9090/xx/import"
-          :on-success="handleUploadSuccess"
-          :show-file-list=false
-          :limit="1"
-          accept='.xlsx'
-          style="display: inline-block; margin: 0 10px"
-      >
-        <el-button type="primary">导入</el-button>
-      </el-upload>
-      <el-button type="primary" @click="exportUser">导出</el-button>
-    </div>
-    <!--    搜索区域-->
-    <div style="margin: 10px 0">
-      <el-input v-model="search" placeholder="请输入关键字" style="width: 20%;"></el-input>
-      <el-button type="primary" style="margin-left: 5px" @click="load()">搜索</el-button>
-    </div>
-    <el-table :data="tableData" style="width: 85%;margin-left: 30px" stripe border>
-      <!--      sortable 加了个可以排序的东东 prop name label value-->
-      <el-table-column prop="id" label="序号" sortable width="80px"/>
-      <el-table-column prop="title" label="标题" width="350px"/>
-<!--      <el-table-column prop="content" label="内容" width="100px"/>-->
-      <el-table-column prop="author" label="作者" width="100px"/>
-      <el-table-column prop="time" label="发布时间" width="250px"/>
-      <el-table-column fixed="right" label="操作" >
-        <template #default="scope">
-          <el-button size="small" @click="details(scope.row)">详情</el-button>
-          <el-button size="small" @click="handleClick(scope.row)">编辑</el-button>
-          <el-popconfirm title="确定要删除吗" @confirm="handleDelete(scope.row.id)">
-            <template #reference>
-              <el-button size="small" type="danger">删除</el-button>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
-    <!--  分页  -->
-    <div style="padding: 10px 0">
-      <el-pagination
-          :currentPage="currentPage"
-          :page-size="pageSize"
-          :page-sizes="[5, 10, 20]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-      />
-      <!--  分页  -->
-
-<!--编辑修改弹出框-->
-      <el-dialog v-model="dialogVisible" title="提示" width="50%">
-        <el-form :model="form" label-width="120px">
-          <el-form-item label="标题">
-            <el-input v-model="form.title" style="width: 50%;"></el-input>
+<!--      顶行 筛选栏 两个框-->
+      <el-form ref="form" :model="form" label-width="120px" :rules="rules">
+        <el-row>
+          <el-form-item prop="eventProject">
+            <span style="font-size: larger">赛事项目:</span>
+            <el-select v-model="form.eventProject" placeholder="赛事项目"
+                       filterable clearable style="margin: 10px 10px 10px 0" @change="queryProject">
+              <el-option
+                  v-for="(item,i) in projectOptions"
+                  :key="i"
+                  :label="item.projectName"
+                  :value="item.projectName">
+              </el-option>
+            </el-select>
           </el-form-item>
-          <div id="div1">
-          </div>
-        </el-form>
-        <template #footer>
-            <span class="dialog-footer">
-              <el-button @click="dialogVisible = false">取消</el-button>
-              <el-button type="primary" @click="save">确认</el-button>
-            </span>
-        </template>
-      </el-dialog>
-      <el-dialog v-model="vis" title="新闻详情" width="50%">
-        <el-card>
-          <div v-html="detail.content" style="min-height: 200px"> </div>
-        </el-card>
-      </el-dialog>
+          <el-form-item prop="eventId">
+            <span style="font-size: larger">赛事名称:</span>
+            <el-select v-model="form.eventId" placeholder="赛事名称"
+                       filterable clearable style="margin: 10px 10px 10px 0" >
+              <el-option
+                  v-for="(item,i) in events"
+                  :key="i"
+                  :label="item.eventName"
+                  :value="item.id">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-row>
+
+      </el-form>
     </div>
+    <!--    主体区域 分两块-->
+    <div style="height: 200px;width:99%;">
+      <div style="text-align: center;background-color: #cccccc;height: 30px;font-weight: bolder;line-height: 30px">赛事提醒</div>
+      <el-input type="textarea" v-model="form.mailText"></el-input>
+      <el-upload
+          class="upload-demo"
+          :limit="1"
+          ref="upload"
+          action="https://jsonplaceholder.typicode.com/posts/"
+          :file-list="form.file"
+          :on-change="getFile"
+          :auto-upload="false">
+        <el-button slot="trigger" size="small" type="primary" style="margin-top: 8px;font-size: 14px" >选取附件</el-button>
+        <div slot="tip" class="el-upload__tip" style="font-size: 14px">只能上传jpg/png文件，且不超过500kb</div>
+      </el-upload>
+      <el-button type="success" @click="sendMail" style="font-size: 14px" v-loading.fullscreen.lock="fullscreenLoading">发布</el-button>
+    </div>
+    <div style="height: 30%;width:99%;">
+      <div style="text-align: center;background-color: #cccccc;height: 30px;font-weight: bolder;line-height: 30px">赛事公告</div>
+      <el-input type="button" model-value="添加公告"></el-input>
+    </div>
+    <el-dialog
+        title="提示"
+        :visible.sync="dialogVisible"
+        width="30%"
+        :before-close="handleClose">
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -89,7 +79,9 @@ export default {
   },
   data(){
     return{
-      form: {},
+      form: {
+
+      },
       dialogVisible: false,
       vis: false,
       currentPage: 1,
@@ -97,6 +89,20 @@ export default {
       total: 0,
       search: '',
       detail: {},
+      fullscreenLoading: false,
+      events: [],
+      rules: {
+        eventProject: [
+          {required: true, message: '请选择赛事项目', trigger: 'blur'},
+          {min: 1, max: 10, message: '赛事项目不能为空', trigger: 'blur'}
+        ],
+        eventId: [
+          {required: true, message: '请选择赛事', trigger: 'blur'},
+          {min: 1, max: 32, message: '赛事不能为空', trigger: 'blur'},
+        ],
+      },
+        file: null,
+      projectOptions: [],
       // filesUploadUrls: "http://" + window.server.filesUploadUrl + ":9090/files/upload",
       tableData: [
 
@@ -111,14 +117,8 @@ export default {
       this.vis=true
       this.detail= row
     },
-    handleUploadSuccess(res) {
-      if (res.code === "0") {
-        this.$message.success("导入成功")
-        this.load()
-      }
-    },
-    exportUser() {
-      location.href = "http://" + window.server.filesUploadUrl + ":9090/xx/export";
+    getFile(file,fileList){
+      this.file = file.raw
     },
     createEditor(){
       editor = new E("#div1")
@@ -130,17 +130,15 @@ export default {
     },
     //查询方法
     load(){
-      request.get("/news",{ //get请求不能直接传一个对象当做参数 需要这样写
-        params:{
-          pageNum: this.currentPage,
-          pageSize: this.pageSize,
-          search: this.search
-        }
-      }).then(res =>{
-        console.log(res)
-        this.tableData= res.data.records
-        this.total = res.data.total
+      request.post("/event/queryAllProjectName").then(res =>{
+        this.projectOptions= res.data
       })
+    },
+    queryProject(){
+      request.post("/event/queryAllEvents",this.form).then(res =>{
+        this.events= res.data.list
+      })
+
     },
     add(){
       this.dialogVisible=true
@@ -155,54 +153,42 @@ export default {
 
       })
     },
-    save(){
-      this.form.content=editor.txt.html();
-      let userStr = sessionStorage.getItem("user") || "{}"
-      let user = JSON.parse(userStr)
-      this.form.author = user.nickName
-      if(this.form.id){//update
-        request.put("/news",this.form).then(res =>{
-          console.log(res)
-          if (res.code === '0'){
-            //element ui 提供的提示框 别忘了这个美元符合
-            this.$message({
-              type: "success",
-              message: "更新成功"
-            })
+    sendMail(){
+      this.$refs['form'].validate((valid) => {
+        if (valid) {
+          if (!this.form.eventProject) {
+            this.$message.error("请选择赛事项目")
+            return
           }
-          else {
-            this.$message({
-              type: "error",
-              message: res.msg
-            })
+          if (!this.form.eventId) {
+            this.$message.error("请选择赛事")
+            return
           }
-          this.load()
-          this.dialogVisible=false
-        })
       }
-      else {//add
-        request.post("/news", this.form).then(res =>{
-          console.log(res);
-          if (res.code === '0'){
-            //element ui 提供的提示框
-            this.$message({
-              type: "success",
-              message: "新增成功"
-            })
-          }
-          else {
-            this.$message({
-              type: "error",
-              message: res.msg
-            })
-          }
-          this.load()
-          this.dialogVisible=false
+      })
+      let params = new FormData()
+      if (this.file === null){
+        this.$message({
+          type: "error",
+          message: "请选择附件"
         })
-
+      }else {
+        params.append('file', this.file)
+        params.append('eventId', this.form.eventId)
+        params.append('mailText', this.form.mailText)
+        request.post("/news/sendMail", params, {
+          'Content-Type': 'multipart/form-data'
+        })
+        this.fullscreenLoading = true;
+        setTimeout(() => {
+          this.fullscreenLoading = false;
+          this.$message({
+            type: "success",
+            message: "发布成功"
+          })
+        }, 5000);
       }
     },
-
     //编辑
     handleClick(row){
       this.form=JSON.parse(JSON.stringify(row)) //这一步将数据转来转去的操作能将要展示的数据搞成一个独立的对象

@@ -17,14 +17,17 @@ import com.example.demo.mapper.PermissionMapper;
 import com.example.demo.mapper.RoleMapper;
 import com.example.demo.mapper.UserMapper;
 import com.example.demo.service.UserService;
+import com.example.demo.utils.BeanCopyUtil;
 import com.example.demo.utils.CookieUtil;
 import com.example.demo.utils.JsonUtil;
+import com.example.demo.utils.MD5Util;
 import com.example.demo.vo.RegisterVO;
 import com.example.demo.vo.UserVO;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -56,35 +59,32 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserVO accountLogin(User user,HttpServletResponse response,HttpServletRequest request) {
+        String password = MD5Util.inputPassToFromPass(user.getPassword());
         LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getAccount, user.getAccount()).eq(User::getPassword, user.getPassword());
+                .eq(User::getAccount, user.getAccount()).eq(User::getPassword, password);
         User selectedUser = userMapper.selectOne(wrapper);
         if(selectedUser == null){
             throw new CustomException("用户不存在或密码错误");
         }
         String roleIds = selectedUser.getRoleIds();
         List<String> roleIdsList = JsonUtil.fromJsonList(roleIds);
-        List<Permission> permissionList = new ArrayList<>();
         //set集合去重
-        Set<String> perIdListAll = new HashSet<>();
+        Set<Permission> perIdListAll = new HashSet<>();
         if (!roleIdsList.isEmpty()){
             for (String roleId : roleIdsList) {
                 //通过roleId查出对应的per_id 循环里有查询 记得优化一下
-                List<String> perIdList = permissionMapper.getPerIdByRoleId(roleId);
+                List<Permission> perIdList = permissionMapper.getPerByRoleId(roleId);
                 perIdListAll.addAll(perIdList);
             }
         }
-        for (String perId : perIdListAll) {
-            Permission permission = permissionMapper.selectById(perId);
-            permissionList.add(permission);
-        }
+
         //排序
-        List<Permission> permissions = permissionList.stream().sorted(Comparator.comparing(Permission::getPerId))
+        List<Permission> permissions = perIdListAll.stream().sorted(Comparator.comparing(Permission::getPerId))
                 .collect(Collectors.toList());
-        UserVO userVO = BuildVo.userVoBuild(permissions, selectedUser);
+        UserVO userVO = BuildVo.userVoBuild(permissions, selectedUser,roleIdsList);
         String userTicket = IdUtil.simpleUUID();
         //将用户信息存入redis
-//        redisTemplate.opsForValue().set("user:"+userTicket,userVO);
+        redisTemplate.opsForValue().set("user:"+userTicket,userVO);
         //将标识存入cookie
         CookieUtil.setCookie(request,response,"userTicket",userTicket);
         return userVO;
@@ -120,83 +120,94 @@ public class UserServiceImpl implements UserService {
              * 默认状态2
              */
             List<String> roleIdList = new ArrayList<String>();
-            roleIdList.add("79fal8a52e7d49bey3nf8ce90637t536");
+            roleIdList.add("2");
             String simpleUUID = IdUtil.fastSimpleUUID();
             User user = User.builder()
                     .account(registerVO.getAccount())
-                    .password(registerVO.getPassword())
+                    .password(MD5Util.inputPassToFromPass(registerVO.getPassword()))
                     .identityNum(registerVO.getIdentityNum())
                     .realName(registerVO.getRealName())
-                    .avatar("C:\\Users\\ZJ\\Desktop\\avatar\\back1.png")
-                    .uid(simpleUUID)
+                    .avatar("https://zjbucket-02.oss-cn-guangzhou.aliyuncs.com/4f73053b481546b2a16325b5e0cb07d4.jpg")
+                    .uid(simpleUUID.replace("-",""))
                     .state(1)
                     .roleIds(JsonUtil.toJsonStr(roleIdList)).build();
             userMapper.insert(user);
             return Result.success();
         }
-        return Result.error("1","注册失败");
+        return Result.error("1","注册失败,不是合法的身份证");
     }
 
     @Override
+    @Transactional
     public Result<?> insertUser(UserVO userVO) {
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUid, getClass());
-        User selectedUser = userMapper.selectOne(wrapper);
-        String roleIds = selectedUser.getRoleIds();
+        //当前操作的用户id
+        String uid = userVO.getUid();
+        User currentUser = userMapper.selectById(uid);
+        String roleIds = currentUser.getRoleIds();
         List<String> roleList = JsonUtil.fromJsonList(roleIds);
-        for (String role : roleList) {
+        boolean flag = false;
+         for (String role : roleList) {
             LambdaQueryWrapper<Role> wrapperRole = Wrappers.<Role>lambdaQuery()
                     .eq(Role::getRid, role);
             Role selectRole = roleMapper.selectOne(wrapperRole);
-            Integer isSystem = selectRole.getIsSystem();
-
-
-            if (isSystem == 1){
-                Integer sexNum;
-                List<String> roleIdList = new ArrayList<String>();
-                roleIdList.add("79fal8a52e7d49bey3nf8ce90637t536");
-                String sex = userVO.getSex();
-                if (sex.equals("男")){
-                     sexNum = 1;
-                }else {
-                     sexNum = 0;
-                }
-                User user = User.builder().
-                        uid(IdUtil.fastSimpleUUID()).
-                        account(userVO.getAccount()).userName(userVO.getUserName())
-                        .realName(userVO.getRealName()).password(userVO.getPassword())
-                        .sex("sexNum").age(userVO.getAge()).state(2)
-                        .roleIds(JsonUtil.toJsonStr(roleIdList)).
-                        build();
-                userMapper.insert(user);
-                return Result.success();
-            }else {
-                return Result.error("1","非系统用户禁止手动新增用户");
+             Integer isSystem = selectRole.getIsSystem();
+             if (isSystem == 1){
+                flag = true;
+                break;
             }
         }
-        return Result.error("1","新增失败");
+         try {
+             if (flag){
+                 User user = User.builder().
+                         uid(IdUtil.fastSimpleUUID()).
+                         account(userVO.getAccount()).userName(userVO.getUserName())
+                         .realName(userVO.getRealName()).password(MD5Util.inputPassToFromPass(userVO.getPassword()))
+                         .sex(userVO.getSex()).age(userVO.getAge()).state(2)
+                         .roleIds(JsonUtil.toJsonStr(userVO.getRoleIds().stream().map(String::valueOf).collect(Collectors.toList()))).
+                                 build();
+                 userMapper.insert(user);
+                 return Result.success();
+             }else {
+                 return Result.error("1","非系统用户禁止手动新增用户");
+             }
+         }catch (Exception e){
+             return Result.error("1","新增失败");
+         }
+
+
+
+
     }
 
     @Override
-    public Result<?> updateUser(UserVO userVO) {
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUid, userVO.getAccount());
-        User selectedUser = userMapper.selectOne(wrapper);
-        String roleIds = selectedUser.getRoleIds();
-        List<String> roleList = JsonUtil.fromJsonList(roleIds);
-        for (String role : roleList) {
-            LambdaQueryWrapper<Role> wrapperRole = Wrappers.<Role>lambdaQuery()
-                    .eq(Role::getRid, role);
-            Role selectRole = roleMapper.selectOne(wrapperRole);
-            Integer isSystem = selectRole.getIsSystem();
-            if (isSystem == 1){
+    public void updateUser(UserVO userVO) {
+        List<Integer> roleIds = userVO.getRoleIds();
+        userMapper.updateById(User.builder().
+                            uid(userVO.getUid())
+                            .avatar(userVO.getAvatar())
+                            .realName(userVO.getRealName())
+                            .identityNum(userVO.getIdentityNum())
+                            .state(userVO.getState())
+                            .roleIds(JsonUtil.toJsonStr(roleIds.stream().map(String::valueOf).collect(Collectors.toList())))
+                            .password(userVO.getPassword())
+                            .account(userVO.getAccount())
+                            .age(userVO.getAge())
+                            .sex(userVO.getSex())
+                            .userName(userVO.getUserName())
+                            .phone(userVO.getPhone())
+                            .email(userVO.getEmail()).build());
+    }
 
-                return Result.success();
-            }else {
-                return Result.error("1","非系统用户禁止手动修改用户");
-            }
-        }
-        return Result.error("1","修改失败");
+    @Override
+    public void updateUserPerson(UserVO userVO) {
+        userMapper.updateById(User.builder().
+                uid(userVO.getUid())
+                .avatar(userVO.getAvatar())
+                .userName(userVO.getUserName())
+                .age(userVO.getAge())
+                .sex(userVO.getSex())
+                .phone(userVO.getPhone())
+                .email(userVO.getEmail()).build());
     }
 
 
@@ -213,8 +224,10 @@ public class UserServiceImpl implements UserService {
                 //构建角色id-id号 name-角色名键值对
                 List<Map<String,String>> roleList = new ArrayList<>(4);
                 List<String> roleIds = JsonUtil.fromJsonList(user.getRoleIds());
+                List<Integer> roleIdList = new ArrayList<>();
                 if (roleIds != null && roleIds.size()>0){
                     roleIds.forEach(roleId ->{
+                        roleIdList.add(Integer.parseInt(roleId));
                         HashMap<String, String> roleMap = new HashMap<>(2);
                         roleMap.put("id",roleId);
                         roleMap.put("name",roleMapper.selectById(roleId).getRoleName());
@@ -236,6 +249,7 @@ public class UserServiceImpl implements UserService {
                         .realName(user.getRealName())
                         .roles(roleList)
                         .userName(user.getUserName())
+                        .roleIds(roleIdList)
                         .state(user.getState()).build());
             });
         }
@@ -245,13 +259,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Result getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse) {
-        User user = (User) redisTemplate.opsForValue().get("user:" + userTicket);
-        Result result;
+    public Result<?> getUserByCookie(String userTicket, HttpServletRequest nativeRequest, HttpServletResponse nativeResponse) {
+        UserVO user = (UserVO) redisTemplate.opsForValue().get("user:" + userTicket);
+        Result<?> result;
         if (user == null) {
-           result = Result.error("0","用户授权已过期");
+           result = Result.success(UserVO.builder().msg("用户授权已过期").build());
+        }else {
+            result = Result.success(user);
         }
-        result = Result.success(user);
         return result;
     }
 

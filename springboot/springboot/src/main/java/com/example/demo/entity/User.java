@@ -25,6 +25,8 @@ import java.util.List;
 @AllArgsConstructor
 public class User implements Serializable {
 
+    public interface LoginGroup{}
+
     private static final long serialVersionUID = 1L;
 
     @TableId
@@ -32,6 +34,7 @@ public class User implements Serializable {
     private String userName;
     private String realName;
     private String password;
+
     private String account;
     @Pattern(regexp = "^1(3\\d|4[5-9]|5[0-35-9]|6[567]|7[0-8]|8\\d|9[0-35-9])\\d{8}$",message = "手机格式不正确")
     private String phone;

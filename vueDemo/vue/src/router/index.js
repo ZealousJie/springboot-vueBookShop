@@ -11,9 +11,9 @@ const routes = [
     redirect: '/login',
     children: [
       {
-        path: 'person',
-        name: 'Person',
-        component: () => import("../views/Person"),
+        path: 'index',
+        name: 'Index',
+        component: () => import("../views/Index"),
       }
     ]
   },

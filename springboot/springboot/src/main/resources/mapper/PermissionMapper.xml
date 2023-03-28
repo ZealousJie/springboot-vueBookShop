@@ -4,10 +4,24 @@
 <mapper namespace="com.example.demo.mapper.PermissionMapper">
 
     <sql id="perColumn">
-
+        per_id,name,path,comment,icon
     </sql>
-    <select id="getPerIdByRoleId" resultType="String">
+    <insert id="insertBatch">
+        insert into match_role_permission(role_id,permission_id)
+        values
+        <foreach item="item" collection="perList" separator=",">
+            (#{roleId},#{item})
+        </foreach>
+    </insert>
+    <delete id="deleteByRoleId">
+        delete from match_role_permission where role_id = #{roleId}
+    </delete>
+    <select id="getPerIdByRoleId" resultType="INT">
         select permission_id from match_role_permission where role_id = #{roleId}
+    </select>
+    <select id="getPerByRoleId" resultType="com.example.demo.entity.Permission">
+        select <include refid="perColumn"/> from match_role_permission a,match_permission b where role_id = #{roleId}
+        and a.permission_id = b.per_id
     </select>
 
 

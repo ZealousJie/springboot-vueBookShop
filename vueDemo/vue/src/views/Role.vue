@@ -14,13 +14,13 @@
         <i class="el-icon-delete"></i>批量删除
       </el-button>
     </div>
-    <el-table :data="tableData" style="width: 99%;margin-left: 0px"
+    <el-table :data="tableData" size="18px" style="width: 99%;margin-left: 0px"
               stripe border ref="singleTable"
               tooltip-effect="dark"
               @selection-change="handleSelectionChange">
-      <el-table-column type="index"/>
       <el-table-column type="selection"/>
-      <el-table-column prop="rid" label="编号" align='center'/>
+      <el-table-column type="index" label="序号" width="80px" align="center"/>
+
       <el-table-column prop="roleName" label="角色名" width="150px"  align='center'/>
       <el-table-column prop="isSystem" label="是否为系统角色" align="center" >
         <template #default="scope">
@@ -41,8 +41,16 @@
 <!--          </el-image>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
+      <el-table-column label="权限菜单">
+        <template #default="scope">
+          <el-select clearable v-model="scope.row.permissionList" multiple placeholder="请选择" style="width: 80%">
+            <el-option v-for="item in permissions" :key="item.perId" :label="item.comment" :value="item.perId"></el-option>
+          </el-select>
+        </template>
+      </el-table-column>
       <el-table-column fixed="right" label="操作" align='center'>
         <template #default="scope">
+          <el-button size="small" @click="handlePermission(scope.row)" icon="edit" type="success" style="width: 115px">保存权限修改</el-button>
           <el-button size="small" @click="handleClick(scope.row)" icon="edit">编辑</el-button>
           <el-popconfirm title="确定要删除吗" @confirm="this.delete(scope.row.rid)">
             <template #reference>
@@ -73,10 +81,7 @@
             <el-input v-model="form.roleName" style="width: 80%;"></el-input>
           </el-form-item>
           <el-form-item label="角色描述">
-            <el-input v-model="form.price" style="width: 80%;"></el-input>
-          </el-form-item>
-          <el-form-item label="角色权限">
-            <el-input v-model="form.createTime" style="width: 80%;"></el-input>
+            <el-input v-model="form.description" style="width: 80%;"></el-input>
           </el-form-item>
           <el-form-item label="是否为系统角色">
             <el-radio-group v-model="form.isSystem">
@@ -127,6 +132,7 @@
 <script>
 
 import request from "../utils/request";
+import Cookies from "js-cookie";
 
 
 export default {
@@ -136,6 +142,7 @@ export default {
   data(){
     return{
       form: {},
+      roleForm: {},
       searchForm: {},
       orderForm: {
         goodsId: 0,
@@ -150,26 +157,25 @@ export default {
       tableData: [],
       search: '',
       selection: [],
-      ids: []
+      ids: [],
+      permissions: []
     }
   },
   created() { // 页面加载时就执行的方法
     this.load()
   },
   methods: {
-    filesUploadSuccess(res) {
-      console.log(res)
-      this.form.cover = res.data
-    },
     //查询方法
     load(){
       this.searchForm.page=this.currentPage
       this.searchForm.rows=this.pageSize
       this.searchForm.search=this.search
       request.post("/role/findRoles",this.searchForm).then(res =>{
-        console.log(res)
         this.tableData= res.data.list
         this.total = res.data.total
+      })
+      request.get("/role/findPermission").then(res => {
+        this.permissions = res.data
       })
     },
     add(){
@@ -180,8 +186,8 @@ export default {
       }
     },
     save(){
-      if(this.form.bid){//update
-        request.put("/book",this.form).then(res =>{
+      if(this.form.rid){//update
+        request.post("/role/updateRole",this.form).then(res =>{
           console.log(res)
           if (res.code === '0'){
             //element ui 提供的提示框 别忘了这个美元符合
@@ -189,7 +195,7 @@ export default {
               type: "success",
               message: "更新成功"
             })
-            this.$refs['upload'].clearFiles()  // 清除历史文件列表
+            // this.$refs['upload'].clearFiles()  // 清除历史文件列表
           }
           else {
             this.$message({
@@ -202,7 +208,7 @@ export default {
         })
       }
       else {//add
-        request.post("/role/addRole", this.form).then(res =>{
+        request.post("/role/insertRole", this.form).then(res =>{
           console.log(res);
           if (res.code === '0'){
             //element ui 提供的提示框
@@ -230,7 +236,6 @@ export default {
     },
     saveOrder(){
       request.post("/order", this.orderForm).then(res =>{
-        console.log(res);
         if (res.code === '0'){
           //element ui 提供的提示框
           this.$message({
@@ -255,6 +260,36 @@ export default {
       //JSON.parse(JSON.stringify(row)) 这一步将数据转来转去的操作能将要展示的数据搞成一个独立的对象
       //这里的form有id
       this.dialogVisible=true
+    },
+    handlePermission(row){
+      let userCurrent = JSON.parse(Cookies.get("user"))
+      this.roleForm.rid = row.rid
+      this.roleForm.permissionList = row.permissionList
+      this.roleForm.currentRoleIds = userCurrent.roleList
+      console.log(this.roleForm)
+      request.post("/role/changePermission",this.roleForm).then(res => {
+        if (res.code === '0'){
+          this.$message({
+            type: "success",
+            message: "更新成功"
+          })
+        }
+        else if (res.code === "2"){
+          this.$message({
+            type: "info",
+            message: res.msg
+          })
+          //10s后强制重新登录
+          setTimeout(() => {
+            this.$router.push("/login")
+          },10000)
+        }else {
+          this.$message({
+            type: "error",
+            message: res.msg
+          })
+        }
+      })
     },
     deleteRole() {
       if (this.selection.length === 0) {//选中0条数据时

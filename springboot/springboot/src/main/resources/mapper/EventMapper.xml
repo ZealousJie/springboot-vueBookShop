@@ -19,9 +19,17 @@
         bonus,
         organizer,
         event_state,
-        event_createTime
+        event_createTime,
+        parent_id,
+        audit_state
     </sql>
 
+    <insert id="insertEvent">
+        insert into match_event(<include refid="eventArgs"/>) values (#{id},#{eventName},#{eventProject},
+                                          #{eventOnlineType},#{eventTeamOrPersonal}
+        ,#{eventType},#{eventStage},#{eventEntrants},#{eventVenue},#{unitPrice},#{remainingTickets},
+                                          #{bonus},#{organizer},#{eventState},#{eventCreateTime},#{parentId},#{auditState})
+    </insert>
 
 
     <select id="queryEvent" resultType="com.example.demo.entity.Event">
@@ -31,22 +39,33 @@
                 event_name like CONCAT('%',#{eventName},'%')
             </if>
             <if test=" eventProject != null and eventProject != ''">
-                event_project = #{eventProject}
+                and event_project = #{eventProject}
             </if>
-            <if test="eventOnlineType != null and eventOnlineType != ''">
-                event_onlineType = #{eventOnlineType}
+            <if test="eventOnlineType != null">
+                and event_onlineType = #{eventOnlineType}
             </if>
-            <if test="eventTeamOrPersonal != null and eventTeamOrPersonal != ''">
-                event_teamOrPersonal = #{eventTeamOrPersonal}
+            <if test="eventTeamOrPersonal != null">
+                and event_teamOrPersonal = #{eventTeamOrPersonal}
             </if>
-            <if test="eventType != null and eventType != ''">
-                event_type = #{eventType}
+            <if test="eventType != null">
+                and event_type = #{eventType}
             </if>
+            <if test="organizer !=null and organizer != ''">
+                and organizer=#{organizer}
+            </if>
+            and audit_state = 1
         </where>
         order by event_createTime
     </select>
 
-    <delete id="deleteByUid" parameterType="String">
-        delete from match_user where uid=#{uid}
-    </delete>
+    <select id="queryAttentionByUid" resultType="com.example.demo.entity.Event">
+        select <include refid="eventArgs"/> from match_attention a, match_event b where a.uid = #{uid} and
+        a.eventId = b.id
+    </select>
+
+    <select id="queryProjectNum" resultType="java.util.Map">
+        select event_project,count(*) as number from match_event where audit_state = 1 group by event_project
+    </select>
+
+
 </mapper>

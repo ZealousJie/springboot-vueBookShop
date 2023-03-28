@@ -14,4 +14,8 @@ public interface RoleMapper extends BaseMapper<Role> {
 
     List<Role> findRolesByPage(@Param("column")String column,@Param("search") String search,
                                @Param("sortColumn")String sortColumn,@Param("asc") boolean asc);
+
+    void updateByRId(Role role);
+
+    void insertRole(Role role);
 }

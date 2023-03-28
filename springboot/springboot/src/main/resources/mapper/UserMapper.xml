@@ -54,6 +54,7 @@
         </if>
     </select>
 
+
     <delete id="deleteByUid" parameterType="String">
         delete from match_user where uid=#{uid}
     </delete>

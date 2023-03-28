@@ -8,6 +8,8 @@ import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.example.demo.common.Result;
+import com.example.demo.utils.OSSUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/files")
 @CrossOrigin
+@Slf4j
 public class FileController {
     @Value("${server.port}")
     private String port;
@@ -85,5 +88,21 @@ public class FileController {
         data.set("url", url);
         json.set("data", arr);
         return json;
+    }
+
+
+    @PostMapping("/ossUpload") //上传接口
+    public Result<?> ossUpload(MultipartFile file) {
+        String image = "";
+        Result<?> result;
+        try {
+             image = OSSUtil.uploadImage(file);
+            log.info("success");
+            result = Result.success(image);
+        }catch (Exception e){
+            log.info("error {}",e.getMessage());
+            result = Result.error("1",e.getLocalizedMessage());
+        }
+        return result;  // 返回结果 url
     }
 }

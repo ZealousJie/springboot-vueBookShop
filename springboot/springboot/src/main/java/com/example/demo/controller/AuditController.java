@@ -1,19 +1,21 @@
 package com.example.demo.controller;
 
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.demo.common.Result;
+import com.example.demo.common.annotation.LoginUser;
 import com.example.demo.entity.Audit;
-import com.example.demo.entity.Book;
-import com.example.demo.entity.User;
+import com.example.demo.entity.Event;
 import com.example.demo.mapper.AuditMapper;
-import com.example.demo.mapper.BookMapper;
-import com.example.demo.mapper.UserMapper;
+import com.example.demo.mapper.EventMapper;
+import com.example.demo.service.AuditService;
+import com.example.demo.vo.AuditVO;
+import com.example.demo.vo.UserVO;
+import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Date;
 
 /**
  * @ author zealousJie
@@ -22,62 +24,71 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/audit")
 @CrossOrigin
+@Slf4j
 public class AuditController {
+    @Resource
+    private AuditService auditService;
+
     @Resource
     private AuditMapper auditMapper;
     @Resource
-    private BookMapper bookMapper;
-    @Resource
-    private UserMapper userMapper;
-    @GetMapping//查询
-    public Result<?> findPage(@RequestParam(defaultValue = "1") Integer pageNum,
+    private EventMapper eventMapper;
+
+    @GetMapping(value = "findAllAudit")//查询
+    public Result<?> findAllAudit(@RequestParam(defaultValue = "1") Integer pageNum,
                               @RequestParam(defaultValue = "10") Integer pageSize,
                               @RequestParam(defaultValue = "") String search){
-        //new一个mp提供的进行分页的Page对象
-        Page<Audit> page = new Page<>(pageNum, pageSize);
-        //用Wrappers 生成一个用来完成模糊查询的 wrapper
-        LambdaQueryWrapper<Audit> wrapper = Wrappers.<Audit>lambdaQuery();
-        if(StrUtil.isNotBlank(search)){//当search 不为空就进行模糊查询 hutool提供的方法 帮助判断非空？
-            wrapper.like(Audit::getBookName, search);
+        Result<?> result;
+        try {
+            PageInfo<AuditVO> queryResult = auditService.queryAudit(pageNum,pageSize,search);
+            result= Result.success(queryResult);
+        }catch (Exception e){
+            e.printStackTrace();
+            result = Result.error("1","查询失败");
         }
-        //用mp的selectPage方法完成分页
-        Page<Audit> auditPage = auditMapper.selectPage(page, wrapper);
-        return Result.success(auditPage);
+
+        return result;
     }
     //审核通过根据id更新状态
-    @RequestMapping(value = "/updateAuditDo/id/{id}/uuid/{uuid}",method = RequestMethod.GET)
-    public Result<?> updateState(@PathVariable("id") Integer id,@PathVariable("uuid") String uuid){
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUid, uuid);
-        User user = userMapper.selectOne(wrapper);
-        Audit audit = auditMapper.selectById(id);
-        LambdaQueryWrapper<Book> bookWrapper = Wrappers.<Book>lambdaQuery()
-                .eq(Book::getBookName, audit.getBookName());
-        Book book = bookMapper.selectOne(bookWrapper);
-        book.setState("已上架");
-        audit.setState("已审核(上架中)");
-        audit.setBid(book.getBid());
-        audit.setAuditPerson(user.getUserName());
-        auditMapper.updateById(audit);
-        bookMapper.updateById(book);
-        return Result.success();
+    @GetMapping(value = "/updateAuditDo/{id}")
+    @Transactional(rollbackFor = Exception.class)
+    public Result<?> updateState(@PathVariable("id") Integer id, @LoginUser UserVO userVO){
+        Result result = new Result();
+        try {
+            Audit audit = auditMapper.selectById(id);
+            audit.setAuditPerson(userVO.getRealName());
+            audit.setAuditTime(new Date());
+            auditMapper.updateById(audit);
+            Event event = eventMapper.selectById(audit.getEventId());
+            event.setAuditState(1);
+            eventMapper.updateById(event);
+            result = Result.success();
+            log.info("success {}","审核成功");
+        }catch (Exception e){
+            log.info("error {}",e.getLocalizedMessage());
+            result = Result.error("1","审核失败");
+        }
+        return result;
     }
 
     //审核不通过 更新状态
-    @PutMapping(value = "/updateAuditDont/uuid/{uuid}")
-    public Result<?> updateReason(@PathVariable("uuid") String uuid,@RequestBody Audit audit){
-        LambdaQueryWrapper<User> wrapper = Wrappers.<User>lambdaQuery()
-                .eq(User::getUid, uuid);
-        User user = userMapper.selectOne(wrapper);
-        LambdaQueryWrapper<Book> bookWrapper = Wrappers.<Book>lambdaQuery()
-                .eq(Book::getBookName, audit.getBookName());
-        Book book = bookMapper.selectOne(bookWrapper);
-        book.setState("无法上架(待删除)");
-        audit.setState("已审核(上架失败)");
-        audit.setBid(book.getBid());
-        audit.setAuditPerson(user.getUserName());
-        auditMapper.updateById(audit);
-        bookMapper.updateById(book);
-        return Result.success();
+    @PostMapping(value = "/updateAuditDont")
+    @Transactional(rollbackFor = Exception.class)
+    public Result<?> updateReason(@RequestBody Audit audit,@LoginUser UserVO userVO){
+        Result result = new Result();
+        try {
+            audit.setAuditPerson(userVO.getRealName());
+            audit.setAuditTime(new Date());
+            auditMapper.updateById(audit);
+            Event event = eventMapper.selectById(audit.getEventId());
+            event.setAuditState(2);
+            eventMapper.updateById(event);
+            result = Result.success();
+            log.info("success {}","审核成功");
+        }catch (Exception e){
+            log.info("error {}",e.getLocalizedMessage());
+            result = Result.error("1","审核失败");
+        }
+        return result;
     }
 }
