@@ -220,6 +220,9 @@
             </span>
         </template>
       </el-dialog>
+      <el-dialog v-model="visEvent" title="购票详情" width="50%">
+        <div id="g6charts"></div>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -229,6 +232,8 @@
 
 import request from "../utils/request";
 import E from "wangeditor";
+import G6 from '@antv/g6';
+
 let editor;
 export default {
   name: 'Event',
@@ -267,7 +272,8 @@ export default {
       // filesUploadUrls: "http://" + window.server.filesUploadUrl + ":9090/files/upload",
       tableData: [
 
-      ]
+      ],
+      visEvent:false
     }
   },
   created() { // 页面加载时就执行的方法
@@ -355,7 +361,8 @@ export default {
 
     },
     eventNews(){
-      this.$router.push("/news")
+      this.visEvent = true;
+
     },
     tableRow({row}){
       if (row.eventAttentionState == "IS_ATTENTION"){

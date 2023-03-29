@@ -20,7 +20,8 @@
           </el-form-item>
           <el-form-item prop="eventId">
             <span style="font-size: larger">赛事名称:</span>
-            <el-select v-model="form.eventId" placeholder="赛事名称" filterable clearable style="margin: 10px 10px 10px 0">
+            <el-select v-model="form.eventId" placeholder="赛事名称" filterable clearable style="margin: 10px 10px 10px 0"
+            @change="getAttr">
               <el-option v-for="(item, i) in events" :key="i" :label="item.eventName" :value="item.id"> </el-option>
             </el-select>
           </el-form-item>
@@ -47,57 +48,56 @@
     </div>
     <div style="height: 30%; width: 99%">
       <div style="text-align: center; background-color: #cccccc; height: 30px; font-weight: bolder; line-height: 30px">赛事公告</div>
-      <el-input type="button" model-value="添加公告" @click="dialogVisible = true"></el-input>
-    </div>
-    <el-dialog v-model="dialogVisible" title="Tips" width="30%">
-      <el-form label-position="right" label-width="100px" :model="dynamicForm" style="max-width: 460px">
+      <el-form label-position="right" label-width="60px" :model="dynamicForm" style="margin-top: 20px">
         <el-row v-for="(item, index) in dynamicForm.announcement" :key="index">
-          <el-col :span="10">
+          <el-col :span="6">
             <el-form-item
-              label="名称"
-              :prop="'announcement.' + index + '.name'"
-              :rules="{
+                label="名称"
+                size="14px"
+                :prop="'announcement.' + index + '.attributeName'"
+                :rules="{
                 required: true,
                 message: '公告名称不能为空',
                 trigger: 'blur',
               }"
             >
-              <el-input v-model="item.name" />
+              <el-input v-model="item.attributeName" />
             </el-form-item>
           </el-col>
-          <el-col :span="10">
+          <el-col :span="6">
             <el-form-item
-              label="描述"
-              :prop="'announcement.' + index + '.description'"
-              :rules="{
+                label="描述"
+                size="14px"
+                :prop="'announcement.' + index + '.attributeValue'"
+                :rules="{
                 required: true,
                 message: '描述不能为空',
                 trigger: 'blur',
               }"
             >
-              <el-input v-model="item.description" />
+              <el-input v-model="item.attributeValue" />
             </el-form-item>
           </el-col>
-          <el-col :span="2"> <el-button type="danger">添加</el-button></el-col>
-          <el-col :span="2"> <el-button type="danger">删除</el-button></el-col>
+          <el-col :span="6">
+            <el-form-item
+                label="排序"
+                size="14px"
+                :prop="'announcement.' + index + '.code'"
+                :rules="{
+                required: true,
+                message: '排序不能为空',
+                trigger: 'blur',
+              }"
+            >
+              <el-input v-model="item.code" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="2" :offset="1"> <el-button type="danger" size="default" v-if="index > 0" @click="handleDeleteAnnouncement(index)">删除</el-button></el-col>
         </el-row>
-        <!-- <el-form-item label="Name">
-          <el-input v-model="formLabelAlign.name" />
-        </el-form-item>
-        <el-form-item label="Activity zone">
-          <el-input v-model="formLabelAlign.region" />
-        </el-form-item>
-        <el-form-item label="Activity form">
-          <el-input v-model="formLabelAlign.type" />
-        </el-form-item> -->
       </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="dialogVisible = false"> 确定 </el-button>
-        </span>
-      </template>
-    </el-dialog>
+      <el-input type="button" model-value="添加公告" @click="handleAddAnnouncement(index)"></el-input>
+      <el-button type="success" @click="addAttribute()" style="margin-top: 10px">确认发布</el-button>
+    </div>
   </div>
 </template>
 
@@ -137,8 +137,9 @@ export default {
       dynamicForm: {
         announcement: [
           {
-            name: '',
-            description: '',
+            attributeName: '',
+            attributeValue: '',
+            code: ''
           },
         ],
       },
@@ -149,6 +150,9 @@ export default {
     this.load();
   },
   methods: {
+    addAttribute(){
+
+    },
     details(row) {
       this.vis = true;
       this.detail = row;
@@ -172,6 +176,12 @@ export default {
     queryProject() {
       request.post('/event/queryAllEvents', this.form).then((res) => {
         this.events = res.data.list;
+      });
+
+    },
+    getAttr(){
+      request.post('/news/getAttribute?eventId='+this.form.eventId).then((res) => {
+        this.dynamicForm.announcement = res.data;
       });
     },
     add() {
@@ -265,6 +275,15 @@ export default {
       this.currentPage = pn;
       this.load();
     },
+    handleAddAnnouncement(index){
+      this.dynamicForm.announcement.splice(index+1,0,{
+        name: '',
+        description: '',
+      })
+    },
+    handleDeleteAnnouncement(index){
+      this.dynamicForm.announcement.splice(index, 1)
+    }
   },
 };
 </script>
