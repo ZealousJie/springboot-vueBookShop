@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.ArrangeMapper">
+
+        <resultMap id="arrangeMap" type="com.example.demo.entity.Arrange">
+            <result property="id" column="id" jdbcType="INTEGER"/>
+            <result property="eventId" column="event_id" jdbcType="VARCHAR"/>
+            <result property="team_idOne" column="team_id_one" jdbcType="INTEGER"/>
+            <result property="team_idTwo" column="team_id_two" jdbcType="INTEGER"/>
+            <result property="victoryTeam" column="victory_team" jdbcType="INTEGER"/>
+            <result property="matchTime" column="match_time" jdbcType="VARCHAR"/>
+
+
+        </resultMap>
+    <select id="queryArrangeByEventId" resultMap="arrangeMap">
+        select * from  match_arrange where event_id = #{eventId}
+    </select>
+
+</mapper>

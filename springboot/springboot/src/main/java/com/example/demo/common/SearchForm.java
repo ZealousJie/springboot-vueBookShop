@@ -40,4 +40,6 @@ public class SearchForm{
 
     private String column;
 
+    private String eventId;
+
 }

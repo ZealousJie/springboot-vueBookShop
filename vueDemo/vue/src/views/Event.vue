@@ -80,7 +80,7 @@
       <el-table-column fixed="right" label="操作" align="center">
         <template #default="scope">
           <el-button size="small" @click="details(scope.row)">详情</el-button>
-          <el-button size="small" @click="buy(scope.row.unitPrice)" :disabled="!scope.row.unitPrice > 0">购票</el-button>
+          <el-button size="small" @click="buy(scope.row.unitPrice,scope.row.id)" :disabled="!scope.row.unitPrice > 0">购票</el-button>
           <el-button size="small" @click="handleClick(scope.row)" class="el-icon-edit" circle></el-button>
           <el-button type="warning" class="el-icon-view" circle @click="attentionOrNot(scope.row)" />
           <el-popconfirm title="确定要删除吗" @confirm="handleDelete(scope.row.id)">
@@ -252,6 +252,7 @@ export default {
       // filesUploadUrls: "http://" + window.server.filesUploadUrl + ":9090/files/upload",
       tableData: [],
       visEvent: false,
+      eventId: '',
     };
   },
   created() {
@@ -262,8 +263,9 @@ export default {
     priceCreate(number) {
       this.buyMsg.price = number * this.unitPrice;
     },
-    buy(price) {
+    buy(price,id) {
       this.buyVis = true;
+      this.eventId = id;
       this.unitPrice = price;
     },
     details(row) {
@@ -300,7 +302,8 @@ export default {
       });
     },
     sureBuy() {
-      request.post('/event/attentionOrNot', attentionForm);
+      this.buyMsg.eventId = this.eventId
+      request.post('/order/addOrder',this.buyMsg);
       this.buyVis = false;
       this.buyMsg = {};
     },
@@ -336,38 +339,84 @@ export default {
       editor.config.uploadFileName = 'file';
       editor.create();
     },
-    eventNews() {
+    eventNews(row) {
+      let teams = row.eventEntrants;
       this.visEvent = true;
-      this.graph = new G6.Graph({
-        container: this.$refs.graph, // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
-        width: 600, // Number，必须，图的宽度
-        height: 500, // Number，必须，图的高度
-      });
-      this.graph.data({
-        // 点集
-        nodes: [
-          {
-            id: 'node1',
-            x: 100,
-            y: 200,
-          },
-          {
-            id: 'node2',
-            x: 300,
-            y: 200,
-          },
-        ],
-        // 边集
-        edges: [
-          // 表示一条从 node1 节点连接到 node2 节点的边
-          {
-            source: 'node1',
-            target: 'node2',
-          },
-        ],
-      }); // 读取 Step 2 中的数据源到图上
-      this.graph.render();
+      this.$nextTick(()=>{
+        this.graph = new G6.Graph({
+          container: this.$refs.graph, // String | HTMLElement，必须，在 Step 1 中创建的容器 id 或容器本身
+          width: 600, // Number，必须，图的宽度
+          height: 500, // Number，必须，图的高度
+        });
+        this.graph.data({
+          // 点集
+          nodes: [
+            {
+              id: 'node1',
+              label: '队伍1',
+              type: 'rect',
+              size: 50,
+              x: 100,
+              y: 200,
+            },
+            {
+              id: 'node2',
+              label: '队伍2',
+              type: 'rect',
+              size: 50,
+              x: 300,
+              y: 200,
+            },
+            {
+              id: 'node3',
+              label: '队伍1',
+              type: 'rect',
+              size: 50,
+              x: 200,
+              y: 100,
+            },
+          ],
+          // 边集
+          edges: [
+            // 表示一条从 node1 节点连接到 node2 节点的边
+            {
+              source: 'node1',
+              target: 'node3',
+            },
+            {
+              source: 'node3',
+              target: 'node2',
+            },
+          ],
+        });
+        // teams.forEach(x =>  {
+        //   if (x.parentLevel === 1){
+        //     let node = {}
+        //     node.id = x.teamId
+        //     node.label = x.teamName
+        //     node.type = 'rect'
+        //     node.size = 50
+        //     node.x = 50*x.parentLevel
+        //     node.y = 50*num
+        //
+        //     this.graph.data.node.push(node)
+        //   }
+        // })
+        // let edge = false;
+        // if (row.eventStage !== null){
+        //   edge = true
+        // }
+        // if (edge){
+        //   this.makeEdges(row)
+        // }
+        // 读取 Step 2 中的数据源到图上
+        this.graph.render();
+      })
+
     },
+    makeEdges(){
+    },
+
     tableRow({ row }) {
       if (row.eventAttentionState == 'IS_ATTENTION') {
         return 'light-row';

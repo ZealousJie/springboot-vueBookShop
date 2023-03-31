@@ -28,6 +28,8 @@ public class Orders {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "GMT+8")
     private Date createTime;
     private Integer state;
+    private Integer buyNum;
+    private String eventId;
     //    //订单到期时间；存储时间戳
 //    private long dueDate;
 

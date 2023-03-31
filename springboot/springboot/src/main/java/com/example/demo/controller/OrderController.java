@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.common.Result;
+import com.example.demo.common.dto.CancelDto;
 import com.example.demo.common.dto.OrderDto;
 import com.example.demo.entity.Event;
 import com.example.demo.entity.Orders;
@@ -53,9 +54,11 @@ public class OrderController {
         Orders order = Orders.builder()
                 .createTime(date)
                 .orderId(new SimpleDateFormat("yyyyMMdd").format(date) + System.currentTimeMillis())
-                .name("购买" + event.getEventName() + "订单")
+                .name(event.getEventName() + "的门票订单")
                 .state(1)
                 .orderType(1)
+                .eventId(orderDto.getEventId())
+                .buyNum(num)
                 .total(orderDto.getPrice()).build();
 
         ordersMapper.insert(order);
@@ -64,18 +67,16 @@ public class OrderController {
         return Result.success();
     }
 
-    @RequestMapping(value = "/deleteOrder/{id}",method = RequestMethod.GET)
-    public Result<?> cancelOrder(@PathVariable("id") Integer id){
-//        Orders orders = ordersMapper.selectById(id);
-//        String num = orders.getNum();
-//        Integer goodsId = orders.getGoodsId();
-//        int i = Integer.parseInt(num);
-//        Book book = bookMapper.selectById(goodsId);
-//        Integer stock = book.getStock();
-//        stock =stock + i;
-//        book.setStock(stock);
-//        bookMapper.updateById(book);
-//        ordersMapper.deleteById(id);
+    @PostMapping(value = "/deleteOrder")
+    public Result<?> cancelOrder(@RequestBody CancelDto cancelDto){
+        Orders orders = ordersMapper.selectById(cancelDto.getOrderId());
+        int num = orders.getBuyNum();
+        Event event = eventMapper.selectById(orders.getEventId());
+        Integer stock = event.getRemainingTickets();
+        stock =stock + num;
+        event.setRemainingTickets(stock);
+        eventMapper.updateById(event);
+        ordersMapper.deleteById(cancelDto.getOrderId());
         return Result.success();
     }
 

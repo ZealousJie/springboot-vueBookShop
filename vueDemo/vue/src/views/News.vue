@@ -151,7 +151,15 @@ export default {
   },
   methods: {
     addAttribute(){
-
+      request.post('/news/addAttribute',{
+        eventId: this.form.eventId,
+        eventAttributeList: this.dynamicForm.announcement
+      }).then((res) => {
+        this.$message({
+          type: 'success',
+          message: '发布成功',
+        });
+      });
     },
     details(row) {
       this.vis = true;
@@ -182,18 +190,6 @@ export default {
     getAttr(){
       request.post('/news/getAttribute?eventId='+this.form.eventId).then((res) => {
         this.dynamicForm.announcement = res.data;
-      });
-    },
-    add() {
-      this.dialogVisible = true;
-      this.form = {}; //清空表单域
-      this.$nextTick(() => {
-        if (!editor) {
-          this.createEditor();
-        } else {
-          editor.destroy();
-          this.createEditor();
-        }
       });
     },
     sendMail() {
@@ -232,41 +228,6 @@ export default {
         }, 5000);
       }
     },
-    //编辑
-    handleClick(row) {
-      this.form = JSON.parse(JSON.stringify(row)); //这一步将数据转来转去的操作能将要展示的数据搞成一个独立的对象
-      //这里的form有id
-      this.dialogVisible = true;
-      this.$nextTick(() => {
-        if (!editor) {
-          this.createEditor();
-          editor.txt.html(row.content);
-        } else {
-          editor.destroy();
-          this.createEditor();
-          editor.txt.html(row.content);
-        }
-      });
-    },
-    handleDelete(id) {
-      console.log(id);
-      request.delete('/news/' + id).then((res) => {
-        console.log(res);
-        if (res.code === '0') {
-          //element ui 提供的提示框
-          this.$message({
-            type: 'success',
-            message: '删除成功',
-          });
-        } else {
-          this.$message({
-            type: 'error',
-            message: res.msg,
-          });
-        }
-        this.load();
-      });
-    },
     handleSizeChange(ps) {
       this.pageSize = ps;
       this.load();
@@ -279,6 +240,7 @@ export default {
       this.dynamicForm.announcement.splice(index+1,0,{
         name: '',
         description: '',
+        code: ''
       })
     },
     handleDeleteAnnouncement(index){

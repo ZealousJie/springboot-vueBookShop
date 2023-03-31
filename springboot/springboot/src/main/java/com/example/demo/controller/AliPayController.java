@@ -79,7 +79,6 @@ public class AliPayController {
             Map<String, String[]> requestParams = request.getParameterMap();
             for (String name : requestParams.keySet()) {
                 params.put(name, request.getParameter(name));
-                // System.out.println(name + " = " + request.getParameter(name));
             }
 
             String outTradeNo = params.get("out_trade_no");
@@ -109,8 +108,6 @@ public class AliPayController {
 
                 if (order != null) {
                     order.setAlipayNo(alipayTradeNo);
-                    SimpleDateFormat sdf =   new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                    Date parse = sdf.parse(gmtPayment);//买家付款时间
                     order.setState(2);
                     ordersMapper.updateById(order);
                 }

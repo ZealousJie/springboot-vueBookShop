@@ -32,7 +32,7 @@ public class WebConfig implements WebMvcConfigurer {
     // 这个方法用来注册拦截器，我们自己写好的拦截器需要通过这里添加注册才能生效
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        List<String> asList = Arrays.asList("/login/accountLogin", "/user/register");
+        List<String> asList = Arrays.asList("/login/accountLogin", "/user/register","/alipay/**");
         registry.addInterceptor(logInterceptor).excludePathPatterns(asList);
     }
 }
