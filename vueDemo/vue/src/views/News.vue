@@ -237,9 +237,9 @@ export default {
       this.load();
     },
     handleAddAnnouncement(index){
-      this.dynamicForm.announcement.splice(index+1,0,{
-        name: '',
-        description: '',
+      this.dynamicForm.announcement.push({
+        attributeName: '',
+        attributeValue: '',
         code: ''
       })
     },
